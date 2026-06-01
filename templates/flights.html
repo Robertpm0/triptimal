@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Flight Deals</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white min-h-screen relative">
+
+<!-- HOME BUTTON -->
+<div class="absolute top-6 left-6 z-40">
+    <button
+        type="button"
+        onclick="window.location.href='/'"
+        class="px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-500 hover:bg-slate-700 transition duration-200 text-sm font-medium shadow-lg"
+    >
+        ← Home
+    </button>
+</div>
+
+
+<!-- AUTH BUTTON -->
+
+<div class="absolute top-6 right-6 z-40">
+
+{% if user %}
+
+<div class="flex gap-3 items-center">
+
+<button
+type="button"
+onclick="logoutUser(event)"
+class="px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-500 hover:bg-slate-700 transition duration-200 text-sm font-medium shadow-lg"
+>
+{{user}} | Logout
+</button>
+
+<button
+type="button"
+onclick="window.location.href='/open_saved_flights'"
+class="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold transition"
+>
+View Saved Flights
+</button>
+
+</div>
+
+{% else %}
+
+<button
+type="button"
+id="authBtn"
+class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-black font-semibold transition duration-200 shadow-lg"
+>
+Login / Sign Up
+</button>
+
+{% endif %}
+
+</div>
+
+
+
+<!-- AUTH MODAL -->
+
+<div
+id="authModal"
+class="fixed inset-0 hidden items-center justify-center bg-black/70 backdrop-blur-sm z-[9999]"
+>
+
+<div class="relative w-full max-w-md mx-4 bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+
+<button
+type="button"
+id="closeModal"
+class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl"
+>
+×
+</button>
+
+<h2 class="text-2xl font-semibold text-sky-400 mb-2">
+Account Access
+</h2>
+
+<p
+id="authText"
+class="text-slate-400 text-sm mb-6"
+>
+Sign in or create an account to save your trips and preferences.
+</p>
+
+<div class="space-y-4">
+
+<input
+id="email"
+type="email"
+placeholder="Email"
+class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
+/>
+
+<input
+id="password"
+type="password"
+placeholder="Password"
+class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
+/>
+
+<div class="grid grid-cols-2 gap-3">
+
+<button
+type="button"
+onclick="login()"
+class="bg-sky-500 hover:bg-sky-400 text-black font-semibold py-3 rounded-xl transition"
+>
+Login
+</button>
+
+<button
+type="button"
+onclick="signup()"
+class="bg-slate-800 border border-slate-700 hover:border-sky-500 py-3 rounded-xl transition"
+>
+Sign Up
+</button>
+
+</div>
+
+<div
+id="message"
+class="text-sm text-center text-slate-400"
+></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="max-w-7xl mx-auto px-8 py-16">
+
+<div class="mb-14">
+
+<h1 class="text-5xl md:text-6xl font-black tracking-tight mb-4">
+Smart Flight Deals
+</h1>
+
+<p class="text-lg text-slate-400 max-w-3xl">
+AI-optimized flight combinations with interactive route maps,
+dynamic pricing, and multi-city trip intelligence.
+</p>
+
+</div>
+
+
+
+<div class="grid md:grid-cols-2 gap-6">
+
+{% for trip in trips %}
+
+<div
+class="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden hover:border-sky-500 hover:-translate-y-1 transition duration-300 cursor-pointer route-card"
+onclick="toggleDetails(this)"
+>
+
+<div class="flex justify-between items-center p-6">
+
+<div>
+
+<div class="text-2xl font-bold">
+
+<!-- {{ trip.departing_from }} -->
+{{ trip.landing_in }}
+
+<span class="text-sky-400">→</span>
+
+{{ trip.departing_from }}
+
+</div>
+
+<div class="text-sm text-slate-400 mt-2">
+
+{{ trip.options|length }}
+optimized travel options
+
+</div>
+
+</div>
+
+
+<div>
+
+<div class="text-xs text-slate-500">
+Cheapest
+</div>
+
+<div class="text-4xl font-black text-sky-400">
+
+${{ "%.0f"|format(trip.options[0].best_price) }}
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="route-details overflow-hidden max-h-0 transition-all duration-500">
+
+{% for opt in trip.options %}
+
+<div
+class="grid lg:grid-cols-2 gap-6 p-6 border-t border-slate-800"
+onclick="event.stopPropagation()"
+>
+
+<div>
+
+<div class="flex justify-between mb-5">
+
+<div class="text-xl font-bold">
+
+<!-- {{ opt.route_name_actual_1 }} -->
+<!-- {{ opt.route_name_actual_2 }} -->
+{{ opt.route_name_actual_1 }}
+
+
+→
+{{ opt.route_name_actual_2 }}
+
+</div>
+
+<div class="text-green-400 text-2xl font-black">
+
+${{ "%.0f"|format(opt.best_price) }}
+
+</div>
+
+</div>
+
+
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Departure</div>
+<div>{{opt.route_1_date}}</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Return</div>
+<div>{{opt.route_2_date}}</div>
+</div>
+
+
+
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Airports</div>
+<div>
+{{opt.route_1_going_from_iata}}
+→
+{{opt.route_2_going_to_iata}}
+</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">
+Distance
+</div>
+
+<div>
+{{opt.total_dist}}
+<!-- {{ "%.0f"|format(
+opt.route_1_distance_km +
+opt.route_2_distance_km
+) }}
+
+km -->
+
+</div>
+
+</div>
+
+<!--  -->
+
+
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Extra Distance to {{ trip.landing_in }}</div>
+<div>{{opt.route_1_distance_km}}</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Extra Distance to {{ trip.departing_from }}</div>
+<div>{{opt.route_2_distance_km}}</div>
+</div>
+
+
+
+<!--  -->
+
+</div>
+
+
+
+<div
+class="flex gap-3 option-links"
+data-trip-id="{{ opt.trip_local_id }}"
+>
+
+<a
+href="{{ opt.link_outbound }}"
+target="_blank"
+class="flex-1 text-center bg-sky-500 hover:bg-sky-400 text-black font-bold py-3 rounded-xl transition"
+>
+✈ Outbound
+</a>
+
+
+<a
+href="{{ opt.link_return }}"
+target="_blank"
+class="flex-1 text-center bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition"
+>
+🔁 Return
+</a>
+
+
+<button
+type="button"
+onclick="saveTrip(event,this)"
+class="flex-1 bg-purple-600 hover:bg-purple-500 py-3 rounded-xl font-bold transition"
+>
+💾 Save Trip
+</button>
+
+</div>
+
+</div>
+
+
+
+<div class="flex flex-col gap-3">
+
+<div class="h-[260px] rounded-2xl overflow-hidden map-preview">
+
+{{ opt.route_map|safe }}
+
+</div>
+
+<button
+type="button"
+onclick="openMap(event,this)"
+class="bg-slate-800 hover:bg-slate-700 rounded-xl py-3 transition"
+>
+Expand Map
+</button>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+
+
+<!-- MAP MODAL -->
+
+<div
+id="mapModal"
+class="fixed inset-0 hidden items-center justify-center bg-black/80 z-[9999]"
+>
+
+<div class="w-[95vw] h-[90vh] bg-slate-900 rounded-3xl relative overflow-hidden">
+
+<button
+type="button"
+onclick="closeMap()"
+class="absolute top-4 right-4 h-12 w-12 rounded-full bg-slate-800 hover:bg-slate-700 z-50"
+>
+✕
+</button>
+
+<div id="modalMapContent" class="w-full h-full"></div>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+const loggedIn =
+{% if user %}
+true
+{% else %}
+false
+{% endif %};
+
+
+/* AUTH MODAL */
+
+const authModal = document.getElementById("authModal");
+const authBtn = document.getElementById("authBtn");
+const closeModalBtn = document.getElementById("closeModal");
+
+function openAuthModal(message = "") {
+
+    if(message){
+        document.getElementById("authText").innerText = message;
+    }
+
+    authModal.classList.remove("hidden");
+    authModal.classList.add("flex");
+}
+
+function closeAuthModal() {
+
+    authModal.classList.remove("flex");
+    authModal.classList.add("hidden");
+}
+
+
+/* OPEN MODAL */
+
+if(authBtn){
+
+    authBtn.addEventListener("click", function(event){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        openAuthModal(
+            "Sign in or create an account to save your trips and preferences."
+        );
+
+    });
+
+}
+
+
+/* CLOSE MODAL */
+
+if(closeModalBtn){
+
+    closeModalBtn.addEventListener("click", function(event){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        closeAuthModal();
+
+    });
+
+}
+
+
+/* CLICK OUTSIDE MODAL */
+
+authModal.addEventListener("click", function(e){
+
+    if(e.target === authModal){
+        closeAuthModal();
+    }
+
+});
+
+
+/* CARD EXPAND */
+
+function toggleDetails(card){
+
+    card.classList.toggle("active");
+
+    const details = card.querySelector(".route-details");
+
+    if(details.style.maxHeight){
+
+        details.style.maxHeight = null;
+
+    } else {
+
+        details.style.maxHeight =
+            details.scrollHeight + "px";
+
+    }
+
+}
+
+
+/* MAP */
+
+function openMap(event, btn){
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const html =
+        btn.closest(".grid")
+        .querySelector(".map-preview")
+        .innerHTML;
+
+    const modal =
+        document.getElementById("mapModal");
+
+    document.getElementById(
+        "modalMapContent"
+    ).innerHTML = html;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+}
+
+function closeMap(){
+
+    const modal =
+        document.getElementById("mapModal");
+
+    modal.classList.remove("flex");
+    modal.classList.add("hidden");
+
+    document.getElementById(
+        "modalMapContent"
+    ).innerHTML = "";
+
+}
+
+
+/* SAVE */
+
+async function saveTrip(event, button){
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if(!loggedIn){
+
+        openAuthModal(
+            "Sign up or log in to save trips and save your flight deals."
+        );
+
+        return;
+    }
+
+    const tripId =
+        button.closest(".option-links")
+        .dataset.tripId;
+
+    try{
+
+        const response =
+            await fetch("/save_trip", {
+                method: "POST",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    trip_id: tripId
+                })
+            });
+
+        const data = await response.json();
+
+        if(data.success){
+
+            button.innerHTML = "✓ Saved";
+            button.disabled = true;
+
+        }
+
+    } catch(error){
+
+        console.log(error);
+
+    }
+
+}
+
+
+/* LOGIN */
+
+async function login(){
+
+    const email =
+        document.getElementById("email").value;
+
+    const password =
+        document.getElementById("password").value;
+
+    try {
+
+        const response = await fetch("/login", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type":"application/json"
+            },
+
+            body: JSON.stringify({
+                email,
+                password
+            })
+
+        });
+
+        const data = await response.json();
+
+        document.getElementById(
+            "message"
+        ).innerText = data.message || "";
+
+        if(data.success){
+
+            window.location.reload();
+
+        }
+
+    } catch(error){
+
+        console.log(error);
+
+    }
+
+}
+
+
+/* SIGNUP */
+
+async function signup(){
+
+    const email =
+        document.getElementById("email").value;
+
+    const password =
+        document.getElementById("password").value;
+
+    try {
+
+        const response = await fetch("/signup", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type":"application/json"
+            },
+
+            body: JSON.stringify({
+                email,
+                password
+            })
+
+        });
+
+        const data = await response.json();
+
+        document.getElementById(
+            "message"
+        ).innerText = data.message || "";
+
+        if(data.success){
+
+            document.getElementById(
+                "message"
+            ).innerText =
+                "Account created successfully. You can now log in.";
+
+        }
+
+    } catch(error){
+
+        console.log(error);
+
+    }
+
+}
+
+
+/* LOGOUT */
+
+async function logoutUser(event){
+
+    if(event){
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    try {
+
+        const response = await fetch("/logout", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type":"application/json"
+            }
+
+        });
+
+        const data = await response.json();
+
+        if(data.success){
+            // window.location.reload()
+            // window.location.href = "/";
+
+        }
+
+    } catch(error){
+
+        console.log("Logout error:", error);
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>

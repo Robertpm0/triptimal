@@ -1,0 +1,1198 @@
+<!-- templates/flights.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyRoute | Smart Travel Planning</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #07111f;
+            --card: rgba(16, 24, 39, 0.75);
+            --glass: rgba(255,255,255,0.08);
+            --border: rgba(255,255,255,0.12);
+
+            --primary: #4f8cff;
+            --primary-2: #67e8f9;
+
+            --text: #f8fafc;
+            --muted: #94a3b8;
+
+            --green: #10b981;
+            --blue: #3b82f6;
+            --yellow: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background:
+                radial-gradient(circle at top left, #12345b 0%, transparent 35%),
+                radial-gradient(circle at bottom right, #0d9488 0%, transparent 30%),
+                linear-gradient(135deg, #06111f 0%, #0f172a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hero {
+
+            padding: 70px 7%;
+            position: relative;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to bottom,
+                    rgba(255,255,255,0.02),
+                    transparent);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 950px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .eyebrow {
+
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+
+            padding: 10px 18px;
+            border-radius: 999px;
+
+            font-size: 14px;
+            color: var(--primary-2);
+
+            backdrop-filter: blur(10px);
+
+            margin-bottom: 28px;
+        }
+
+        .hero h1 {
+
+            font-size: clamp(48px, 7vw, 84px);
+            line-height: 0.95;
+            font-weight: 900;
+            letter-spacing: -3px;
+
+            margin-bottom: 26px;
+        }
+
+        .gradient-text {
+
+            background: linear-gradient(
+                90deg,
+                #ffffff 0%,
+                #67e8f9 40%,
+                #60a5fa 100%
+            );
+
+            background-clip: text;
+            -webkit-background-clip: text;
+
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+
+            font-size: 20px;
+            line-height: 1.7;
+            color: var(--muted);
+
+            max-width: 780px;
+        }
+
+        .content {
+
+            width: min(1500px, 92%);
+            margin: 40px auto 100px auto;
+        }
+
+        .route-group {
+
+            margin-bottom: 60px;
+        }
+
+        .route-header {
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 22px;
+            padding: 0 6px;
+        }
+
+        .route-title {
+
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .route-sub {
+
+            color: var(--muted);
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        .cards-grid {
+
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
+            gap: 26px;
+        }
+
+        .flight-card {
+
+            position: relative;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+
+            border-radius: 30px;
+
+            padding: 26px;
+
+            overflow: hidden;
+
+            backdrop-filter: blur(18px);
+
+            transition: all 0.25s ease;
+        }
+
+        .flight-card:hover {
+
+            transform: translateY(-6px);
+
+            border-color: rgba(103,232,249,0.3);
+
+            box-shadow:
+                0 20px 50px rgba(0,0,0,0.35),
+                0 0 0 1px rgba(255,255,255,0.03);
+        }
+
+        .top-price {
+
+            position: absolute;
+            top: 18px;
+            right: 18px;
+
+            background: linear-gradient(
+                135deg,
+                #10b981,
+                #059669
+            );
+
+            color: white;
+
+            padding: 10px 16px;
+
+            border-radius: 16px;
+
+            font-weight: 800;
+            font-size: 18px;
+
+            box-shadow:
+                0 10px 25px rgba(16,185,129,0.25);
+        }
+
+        .flight-route {
+
+            margin-bottom: 24px;
+        }
+
+        .airport {
+
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .airport-code {
+
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: -2px;
+        }
+
+        .airport-line {
+
+            flex: 1;
+            height: 2px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.15),
+                    rgba(103,232,249,0.8),
+                    rgba(255,255,255,0.15)
+                );
+
+            position: relative;
+        }
+
+        .airport-line::after {
+
+            content: "✈";
+
+            position: absolute;
+            right: 50%;
+            top: -14px;
+
+            font-size: 20px;
+            color: #67e8f9;
+        }
+
+        .meta-grid {
+
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+
+            margin-top: 20px;
+        }
+
+        .meta-box {
+
+            background: rgba(255,255,255,0.04);
+
+            border: 1px solid rgba(255,255,255,0.05);
+
+            border-radius: 18px;
+
+            padding: 16px;
+        }
+
+        .meta-label {
+
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+
+            color: var(--muted);
+
+            margin-bottom: 6px;
+        }
+
+        .meta-value {
+
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .action-row {
+
+            display: flex;
+            gap: 14px;
+
+            margin-top: 26px;
+        }
+
+        .btn {
+
+            flex: 1;
+
+            border: none;
+
+            border-radius: 18px;
+
+            padding: 15px 18px;
+
+            font-size: 15px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+
+            background: linear-gradient(
+                135deg,
+                #3b82f6,
+                #06b6d4
+            );
+
+            color: white;
+        }
+
+        .btn-primary:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 10px 30px rgba(59,130,246,0.35);
+        }
+
+        .btn-secondary {
+
+            background: rgba(255,255,255,0.06);
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            color: white;
+        }
+
+        .btn-secondary:hover {
+
+            background: rgba(255,255,255,0.1);
+        }
+
+        .map-preview {
+
+            margin-top: 24px;
+
+            height: 220px;
+
+            overflow: hidden;
+
+            border-radius: 24px;
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            position: relative;
+        }
+
+        .map-preview iframe {
+
+            width: 100%;
+            height: 100%;
+            border: none;
+
+            pointer-events: none;
+        }
+
+        .expand-overlay {
+
+            position: absolute;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    to top,
+                    rgba(0,0,0,0.55),
+                    transparent
+                );
+
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+
+            padding: 16px;
+
+            cursor: pointer;
+        }
+
+        .expand-chip {
+
+            background: rgba(255,255,255,0.14);
+
+            backdrop-filter: blur(10px);
+
+            padding: 10px 14px;
+
+            border-radius: 999px;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* MODAL */
+
+        .modal {
+
+            display: none;
+
+            position: fixed;
+            inset: 0;
+
+            background: rgba(0,0,0,0.82);
+
+            z-index: 9999;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px;
+        }
+
+        .modal-content {
+
+            width: min(1500px, 96vw);
+            height: 92vh;
+
+            background: #0f172a;
+
+            border-radius: 30px;
+
+            overflow: hidden;
+
+            position: relative;
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            box-shadow:
+                0 30px 80px rgba(0,0,0,0.6);
+        }
+
+        .modal-close {
+
+            position: absolute;
+            top: 20px;
+            right: 20px;
+
+            width: 50px;
+            height: 50px;
+
+            border-radius: 50%;
+
+            border: none;
+
+            background: rgba(255,255,255,0.12);
+
+            color: white;
+
+            font-size: 24px;
+
+            cursor: pointer;
+
+            z-index: 20;
+        }
+
+        .modal-map {
+
+            width: 100%;
+            height: 100%;
+        }
+
+        .modal-map iframe {
+
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media(max-width: 900px) {
+
+            .cards-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+
+                padding-top: 50px;
+            }
+
+            .hero h1 {
+
+                font-size: 52px;
+            }
+
+            .flight-card {
+
+                padding: 22px;
+            }
+        }
+
+        
+.route-group {
+
+
+            margin-bottom: 42px;
+
+    background: rgba(255,255,255,0.04);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    border-radius: 34px;
+
+    overflow: hidden;
+
+    backdrop-filter: blur(20px);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.25);
+}
+
+.route-header-card {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 34px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59,130,246,0.12),
+            rgba(6,182,212,0.08)
+        );
+
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.route-badge {
+
+    display: inline-flex;
+
+    padding: 8px 14px;
+
+    border-radius: 999px;
+
+    background: rgba(103,232,249,0.12);
+
+    color: #67e8f9;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    margin-bottom: 18px;
+}
+
+.route-title-row {
+
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    margin-bottom: 12px;
+}
+
+.route-main-code {
+
+    font-size: 52px;
+    font-weight: 900;
+
+    letter-spacing: -2px;
+}
+
+.route-arrow {
+
+    font-size: 28px;
+    color: #67e8f9;
+}
+
+.route-summary {
+
+    text-align: right;
+}
+
+.summary-label {
+
+    color: var(--muted);
+
+    margin-bottom: 8px;
+
+    font-size: 14px;
+}
+
+.summary-price {
+
+    font-size: 48px;
+    font-weight: 900;
+
+    color: #10b981;
+
+    letter-spacing: -2px;
+}
+
+.trip-options-wrapper {
+
+    display: flex;
+    flex-direction: column;
+}
+
+.trip-option-row {
+
+    display: grid;
+
+    grid-template-columns: 1.3fr 420px;
+
+    gap: 28px;
+
+    padding: 28px 34px;
+
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.trip-option-row:last-child {
+
+    border-bottom: none;
+}
+
+.option-top-row {
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.option-rank {
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 800;
+}
+
+.best-deal-chip {
+
+    padding: 8px 12px;
+
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #10b981,
+            #059669
+        );
+
+    font-size: 12px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+.compact-route {
+
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    margin-bottom: 24px;
+}
+
+.compact-airport {
+
+    font-size: 34px;
+    font-weight: 900;
+
+    letter-spacing: -1px;
+}
+
+.compact-line {
+
+    flex: 1;
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,0.1),
+            #67e8f9,
+            rgba(255,255,255,0.1)
+        );
+
+    position: relative;
+}
+
+.compact-line::after {
+
+    content: "✈";
+
+    position: absolute;
+
+    right: 50%;
+    top: -13px;
+
+    color: #67e8f9;
+}
+
+.compact-meta-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 16px;
+}
+
+.compact-meta {
+
+    background: rgba(255,255,255,0.04);
+
+    border-radius: 18px;
+
+    padding: 16px;
+}
+
+.compact-meta-label {
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    margin-bottom: 6px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+}
+
+.compact-meta-value {
+
+    font-weight: 700;
+}
+
+.compact-actions {
+
+    display: flex;
+    gap: 14px;
+
+    margin-top: 24px;
+}
+
+.trip-option-map {
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.mini-map {
+
+    height: 240px;
+
+    overflow: hidden;
+
+    border-radius: 24px;
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    position: relative;
+}
+
+.mini-map iframe {
+
+    width: 100%;
+    height: 100%;
+
+    border: none;
+
+    pointer-events: none;
+}
+
+.option-price {
+
+    background:
+        linear-gradient(
+            135deg,
+            #3b82f6,
+            #06b6d4
+        );
+
+    border-radius: 22px;
+
+    padding: 18px;
+
+    text-align: center;
+
+    font-size: 34px;
+    font-weight: 900;
+
+    letter-spacing: -1px;
+}
+
+@media(max-width: 1200px) {
+
+    .trip-option-row {
+
+        grid-template-columns: 1fr;
+    }
+
+    .trip-option-map {
+
+        width: 100%;
+    }
+}
+
+@media(max-width: 800px) {
+
+    .route-header-card {
+
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 24px;
+    }
+
+    .route-main-code {
+
+        font-size: 38px;
+    }
+
+    .compact-meta-grid {
+
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .compact-route {
+
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .compact-line {
+
+        width: 100%;
+    }
+
+    .trip-option-row {
+
+        padding: 22px;
+    }
+}
+
+
+    </style>
+</head>
+
+<body>
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="eyebrow">
+                ✈ AI-Powered Multi-City Travel Optimisation
+            </div>
+
+            <h1>
+                Travel smarter.<br>
+                <span class="gradient-text">
+                    Spend less.
+                </span>
+            </h1>
+
+            <p>
+                Discover intelligently optimised flight combinations,
+                hidden route efficiencies, and dynamic travel paths
+                curated to reduce costs while maximizing convenience.
+            </p>
+
+        </div>
+
+    </section>
+
+<!-- REPLACE ONLY THE <main class="content"> ... </main> SECTION WITH THIS -->
+
+<main class="content">
+
+    {% for trip in trips %}
+
+    <!-- OUTER GROUP CONTAINER -->
+    <section class="route-group">
+
+        <!-- GROUP HEADER -->
+        <div class="route-header-card">
+
+            <div class="route-header-left">
+
+                <div class="route-badge">
+                    AI Optimized Route
+                </div>
+
+                <div class="route-title-row">
+
+                    <div class="route-main-code">
+                        {{ trip.departing_from }}
+                    </div>
+
+                    <div class="route-arrow">
+                        ✈
+                    </div>
+
+                    <div class="route-main-code">
+                        {{ trip.landing_in }}
+                    </div>
+
+                </div>
+
+                <div class="route-sub">
+                    {{ trip.options|length }}
+                    optimized flight combinations ranked by lowest total price
+                </div>
+
+            </div>
+
+            <!-- CHEAPEST PRICE SUMMARY -->
+            <div class="route-summary">
+
+                <div class="summary-label">
+                    Cheapest Option
+                </div>
+
+                <div class="summary-price">
+                    ${{ "%.0f"|format(trip.options[0].best_price) }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- INNER OPTIONS -->
+        <div class="trip-options-wrapper">
+
+            {% for option in trip.options %}
+
+            <div class="trip-option-row">
+
+                <!-- LEFT -->
+                <div class="trip-option-main">
+
+                    <div class="option-top-row">
+
+                        <div class="option-rank">
+                            #{{ loop.index }}
+                        </div>
+
+                        {% if loop.index0 == 0 %}
+                        <div class="best-deal-chip">
+                            BEST DEAL
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                    <!-- ROUTE -->
+                    <div class="compact-route">
+
+                        <div class="compact-airport">
+                            {{ option.route_name_actual_1 }}
+                        </div>
+
+                        <div class="compact-line"></div>
+
+                        <div class="compact-airport">
+                            {{ option.route_name_actual_2 }}
+                        </div>
+
+                    </div>
+
+                    <!-- META -->
+                    <div class="compact-meta-grid">
+
+                        <div class="compact-meta">
+
+                            <div class="compact-meta-label">
+                                Departure
+                            </div>
+
+                            <div class="compact-meta-value">
+                                {{ option.route_1_date }}
+                            </div>
+
+                        </div>
+
+                        <div class="compact-meta">
+
+                            <div class="compact-meta-label">
+                                Return
+                            </div>
+
+                            <div class="compact-meta-value">
+                                {{ option.route_2_date }}
+                            </div>
+
+                        </div>
+
+                        <div class="compact-meta">
+
+                            <div class="compact-meta-label">
+                                Outbound
+                            </div>
+
+                            <div class="compact-meta-value">
+                                {{ "%.0f"|format(option.route_1_distance_km) }} km
+                            </div>
+
+                        </div>
+
+                        <div class="compact-meta">
+
+                            <div class="compact-meta-label">
+                                Return
+                            </div>
+
+                            <div class="compact-meta-value">
+                                {{ "%.0f"|format(option.route_2_distance_km) }} km
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="compact-actions">
+
+                        <a
+                            href="{{ option.link_outbound }}"
+                            target="_blank"
+                            style="flex:1;"
+                        >
+                            <button class="btn btn-primary">
+                                Outbound Flight
+                            </button>
+                        </a>
+
+                        <a
+                            href="{{ option.link_return }}"
+                            target="_blank"
+                            style="flex:1;"
+                        >
+                            <button class="btn btn-secondary">
+                                Return Flight
+                            </button>
+                        </a>
+
+                    </div>
+
+                </div>
+
+                <!-- RIGHT MAP -->
+                <div class="trip-option-map">
+
+                    <div class="mini-map">
+
+                        {{ option.route_map|safe }}
+
+                        <div
+                            class="expand-overlay"
+                            onclick="openMap(this)"
+                        >
+
+                            <div class="expand-chip">
+                                Expand Map
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="option-price">
+                        ${{ "%.0f"|format(option.best_price) }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+    {% endfor %}
+
+</main>
+
+
+    <!-- MODAL -->
+
+    <div class="modal" id="mapModal">
+
+        <div class="modal-content">
+
+            <button class="modal-close" onclick="closeMap()">
+                ✕
+            </button>
+
+            <div class="modal-map" id="modalMapContainer"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function openMap(el) {
+
+            const mapPreview =
+                el.parentElement;
+
+            const mapHtml =
+                mapPreview.innerHTML;
+
+            const modal =
+                document.getElementById("mapModal");
+
+            const modalContainer =
+                document.getElementById("modalMapContainer");
+
+            modalContainer.innerHTML = mapHtml;
+
+            modal.style.display = "flex";
+        }
+
+        function closeMap() {
+
+            document.getElementById("mapModal").style.display = "none";
+
+            document.getElementById("modalMapContainer").innerHTML = "";
+        }
+
+        window.addEventListener("click", function(e) {
+
+            const modal =
+                document.getElementById("mapModal");
+
+            if (e.target === modal) {
+
+                closeMap();
+            }
+        });
+
+        window.addEventListener("keydown", function(e) {
+
+            if (e.key === "Escape") {
+
+                closeMap();
+            }
+        });
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+<div class="container">
+    <h1>✈️ Smart Flight Deals</h1>
+
+    <div class="grid">
+        {% for trip in trips %}
+            <div class="route-card" onclick="toggleDetails(this)">
+                
+                <!-- Top Summary -->
+                <div class="route-top">
+                    <div class="route-title">
+                        {{ trip.departing_from }} → {{ trip.landing_in }}
+                    </div>
+
+                    <div class="price">
+                        ${{ "%.2f"|format(trip.options[0].best_price) }}
+                    </div>
+
+                    <div class="sub">
+                        Best available deal
+                    </div>
+                </div>
+
+                <!-- Expandable Details -->
+                <div class="route-details">
+                    {% for opt in trip.options %}
+                        <div class="option" onclick="event.stopPropagation();">
+                            
+                            <div class="option-price">
+                                ${{ "%.2f"|format(opt.best_price) }}
+                            </div>
+
+                            <div class="option-route">
+                                {{ opt.route_name_actual_1 }} → {{ opt.route_name_actual_2 }}
+                            </div>
+
+                            <div class="option-meta">
+                                📅 {{ opt.route_1_date }} → {{ opt.route_2_date }}<br>
+                                🌍 {{ opt.route_1_going_from_iata }} → {{ opt.route_2_going_to_iata }}<br>
+                                📏 {{ opt.route_1_distance_km + opt.route_2_distance_km }} km
+                            </div>
+
+                            <!-- ✈️ Flight Links -->
+                            <div class="option-links">
+                                <a href="{{ opt.link_outbound }}" target="_blank" class="flight-btn">
+                                    ✈️ Outbound
+                                </a>
+
+                                <a href="{{ opt.link_return }}" target="_blank" class="flight-btn return">
+                                    🔁 Return
+                                </a>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+}
+
+.container {
+    padding: 40px;
+    max-width: 1300px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+/* GRID: 4 per row */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+/* CARD */
+.route-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 18px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+}
+
+.route-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    background: rgba(255,255,255,0.08);
+}
+
+/* TOP */
+.route-title {
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.price {
+    font-size: 28px;
+    font-weight: bold;
+    color: #38bdf8;
+    margin: 10px 0;
+}
+
+.sub {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+/* DETAILS (hidden by default) */
+.route-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    margin-top: 10px;
+}
+
+/* Expanded state */
+.route-card.active .route-details {
+    max-height: 500px;
+}
+
+/* OPTION BLOCK */
+.option {
+    margin-top: 15px;
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.option:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.option-price {
+    font-weight: bold;
+    color: #22c55e;
+}
+
+.option-route {
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+.option-meta {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+/* BUTTONS */
+.option-links {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.flight-btn {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: white;
+    background: #38bdf8;
+    transition: 0.2s;
+}
+
+.flight-btn:hover {
+    background: #0ea5e9;
+}
+
+.flight-btn.return {
+    background: #22c55e;
+}
+
+.flight-btn.return:hover {
+    background: #16a34a;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function toggleDetails(card) {
+    card.classList.toggle("active");
+}
+</script>
+```

@@ -1,0 +1,738 @@
+<div class="container">
+
+    <div class="hero">
+        <h1>Smart Flight Deals</h1>
+
+        <p>
+            AI-optimized flight combinations with interactive route maps,
+            dynamic pricing, and multi-city trip intelligence.
+        </p>
+    </div>
+
+    <div class="grid">
+
+        {% for trip in trips %}
+
+        <div class="route-card" onclick="toggleDetails(this)">
+
+            <!-- TOP SUMMARY -->
+            <div class="route-top">
+
+                <div class="route-left">
+
+                    <div class="route-title">
+                        {{ trip.departing_from }}
+                        <span class="arrow">→</span>
+                        {{ trip.landing_in }}
+                    </div>
+
+                    <div class="sub">
+                        {{ trip.options|length }}
+                        optimized travel options
+                    </div>
+
+                </div>
+
+                <div class="price-box">
+
+                    <div class="price-label">
+                        Cheapest
+                    </div>
+
+                    <div class="price">
+                        ${{ "%.0f"|format(trip.options[0].best_price) }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- EXPANDABLE DETAILS -->
+            <div class="route-details">
+
+                {% for opt in trip.options %}
+
+                <div
+                    class="option"
+                    onclick="event.stopPropagation();"
+                >
+
+                    <!-- LEFT CONTENT -->
+                    <div class="option-info">
+
+                        <div class="option-header">
+
+                            <div class="option-route">
+                                {{ opt.route_name_actual_1 }}
+                                →
+                                {{ opt.route_name_actual_2 }}
+                            </div>
+
+                            <div class="option-price">
+                                ${{ "%.0f"|format(opt.best_price) }}
+                            </div>
+
+                        </div>
+
+                        <div class="option-meta-grid">
+
+                            <div class="meta-card">
+
+                                <div class="meta-label">
+                                    Departure
+                                </div>
+
+                                <div class="meta-value">
+                                    {{ opt.route_1_date }}
+                                </div>
+
+                            </div>
+
+                            <div class="meta-card">
+
+                                <div class="meta-label">
+                                    Return
+                                </div>
+
+                                <div class="meta-value">
+                                    {{ opt.route_2_date }}
+                                </div>
+
+                            </div>
+
+                            <div class="meta-card">
+
+                                <div class="meta-label">
+                                    Airports
+                                </div>
+
+                                <div class="meta-value">
+                                    {{ opt.route_1_going_from_iata }}
+                                    →
+                                    {{ opt.route_2_going_to_iata }}
+                                </div>
+
+                            </div>
+
+                            <div class="meta-card">
+
+                                <div class="meta-label">
+                                    Total Distance
+                                </div>
+
+                                <div class="meta-value">
+                                    {{
+                                    "%.0f"|format(
+                                    opt.route_1_distance_km +
+                                    opt.route_2_distance_km
+                                    )
+                                    }}
+                                    km
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- BUTTONS -->
+                        <div
+                            class="option-links"
+                            data-trip-id="{{ opt.trip_local_id }}"
+                        >
+
+                            <a
+                                href="{{ opt.link_outbound }}"
+                                target="_blank"
+                                class="flight-btn"
+                            >
+                                ✈ Outbound
+                            </a>
+
+                            <a
+                                href="{{ opt.link_return }}"
+                                target="_blank"
+                                class="flight-btn return"
+                            >
+                                🔁 Return
+                            </a>
+
+                            <button
+                                class="flight-btn save-trip-btn"
+                                onclick="saveTrip(event,this)"
+                            >
+                                💾 Save Trip
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- MAP -->
+                    <div class="map-wrapper">
+
+                        <div class="map-preview">
+
+                            {{ opt.route_map|safe }}
+
+                        </div>
+
+                        <button
+                            class="expand-map-btn"
+                            onclick="openMap(this)"
+                        >
+                            Expand Map
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<!-- MAP MODAL -->
+<div class="map-modal" id="mapModal">
+
+    <div class="map-modal-content">
+
+        <button
+            class="close-modal"
+            onclick="closeMap()"
+        >
+            ✕
+        </button>
+
+        <div id="modalMapContent"></div>
+
+    </div>
+
+</div>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    font-family: 'Inter', sans-serif;
+
+    background:
+        radial-gradient(circle at top left,
+            rgba(59,130,246,0.25),
+            transparent 30%),
+
+        radial-gradient(circle at bottom right,
+            rgba(34,197,94,0.18),
+            transparent 30%),
+
+        linear-gradient(
+            135deg,
+            #0f172a,
+            #111827,
+            #1e293b
+        );
+
+    color: white;
+
+    min-height: 100vh;
+}
+
+.container {
+
+    max-width: 1500px;
+
+    margin: auto;
+
+    padding: 40px 30px 80px;
+}
+
+.hero {
+
+    margin-bottom: 50px;
+}
+
+.hero h1 {
+
+    font-size: 64px;
+
+    font-weight: 900;
+
+    margin-bottom: 10px;
+
+    letter-spacing: -2px;
+}
+
+.hero p {
+
+    font-size: 18px;
+
+    color: rgba(255,255,255,0.7);
+
+    max-width: 700px;
+
+    line-height: 1.7;
+}
+
+.grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(2,1fr);
+
+    gap: 26px;
+}
+
+.route-card {
+
+    background: rgba(255,255,255,0.06);
+
+    border-radius: 28px;
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    overflow:hidden;
+
+    transition:.35s ease;
+
+    backdrop-filter:blur(16px);
+
+    cursor:pointer;
+}
+
+.route-card:hover {
+
+    transform:translateY(-6px);
+
+    border-color:rgba(56,189,248,0.35);
+
+    box-shadow:
+        0 20px 40px rgba(0,0,0,.35);
+}
+
+.route-top {
+
+    padding:26px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+}
+
+.route-title {
+
+    font-size:28px;
+
+    font-weight:800;
+}
+
+.arrow {
+
+    color:#38bdf8;
+}
+
+.sub {
+
+    margin-top:8px;
+
+    font-size:14px;
+
+    color:rgba(255,255,255,.6);
+}
+
+.price {
+
+    font-size:38px;
+
+    font-weight:900;
+
+    color:#38bdf8;
+}
+
+.route-details {
+
+    max-height:0;
+
+    overflow:hidden;
+
+    transition:max-height .5s ease;
+}
+
+.route-card.active .route-details {
+
+    max-height:5000px;
+}
+
+.option {
+
+    display:grid;
+
+    grid-template-columns:1.2fr 420px;
+
+    gap:22px;
+
+    padding:24px;
+
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.option-header {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:18px;
+}
+
+.option-route {
+
+    font-size:22px;
+
+    font-weight:800;
+}
+
+.option-price {
+
+    font-size:26px;
+
+    font-weight:900;
+
+    color:#22c55e;
+}
+
+.option-meta-grid {
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:14px;
+
+    margin-bottom:20px;
+}
+
+.meta-card {
+
+    background:rgba(255,255,255,.04);
+
+    border-radius:16px;
+
+    padding:14px;
+}
+
+.meta-label {
+
+    font-size:11px;
+
+    color:rgba(255,255,255,.5);
+
+    margin-bottom:6px;
+}
+
+.meta-value {
+
+    font-size:15px;
+
+    font-weight:600;
+}
+
+.option-links {
+
+    display:flex;
+
+    gap:12px;
+}
+
+.flight-btn {
+
+    flex:1;
+
+    text-align:center;
+
+    padding:12px 16px;
+
+    border-radius:14px;
+
+    border:none;
+
+    text-decoration:none;
+
+    font-weight:700;
+
+    color:white;
+
+    cursor:pointer;
+
+    background:linear-gradient(
+        135deg,
+        #0ea5e9,
+        #38bdf8
+    );
+
+    transition:.25s;
+}
+
+.flight-btn:hover {
+
+    transform:translateY(-2px);
+}
+
+.flight-btn.return {
+
+    background:linear-gradient(
+        135deg,
+        #16a34a,
+        #22c55e
+    );
+}
+
+.flight-btn.save-trip-btn {
+
+    background:linear-gradient(
+        135deg,
+        #9333ea,
+        #c084fc
+    );
+}
+
+.map-wrapper {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+}
+
+.map-preview {
+
+    height:260px;
+
+    border-radius:22px;
+
+    overflow:hidden;
+}
+
+.map-preview iframe {
+
+    width:100%!important;
+
+    height:100%!important;
+
+    border:none;
+}
+
+.expand-map-btn {
+
+    border:none;
+
+    background:rgba(255,255,255,.08);
+
+    color:white;
+
+    padding:12px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+}
+
+.map-modal {
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.82);
+
+    display:none;
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:9999;
+}
+
+.map-modal-content {
+
+    width:min(1400px,96vw);
+
+    height:90vh;
+
+    background:#0f172a;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+    position:relative;
+}
+
+.close-modal {
+
+    position:absolute;
+
+    top:18px;
+
+    right:18px;
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:50%;
+
+    border:none;
+
+    background:rgba(255,255,255,.15);
+
+    color:white;
+
+    cursor:pointer;
+
+    z-index:100;
+}
+
+#modalMapContent {
+
+    width:100%;
+    height:100%;
+}
+
+#modalMapContent iframe {
+
+    width:100%!important;
+    height:100%!important;
+}
+
+</style>
+
+<script>
+
+function toggleDetails(card){
+
+    card.classList.toggle("active");
+}
+
+function openMap(btn){
+
+    event.stopPropagation();
+
+    const option=
+    btn.closest(".option");
+
+    const mapHtml=
+    option.querySelector(".map-preview").innerHTML;
+
+    document.getElementById(
+        "modalMapContent"
+    ).innerHTML=mapHtml;
+
+    document.getElementById(
+        "mapModal"
+    ).style.display="flex";
+}
+
+function closeMap(){
+
+    document.getElementById(
+        "mapModal"
+    ).style.display="none";
+
+    document.getElementById(
+        "modalMapContent"
+    ).innerHTML="";
+}
+
+window.addEventListener(
+"click",
+function(e){
+
+const modal=
+document.getElementById(
+"mapModal"
+);
+
+if(e.target===modal){
+
+closeMap();
+}
+
+}
+);
+
+async function saveTrip(event,button){
+
+    event.stopPropagation();
+
+    const container=
+    button.closest(
+        ".option-links"
+    );
+
+    const tripId=
+    container.dataset.tripId;
+
+    try{
+
+        const response=
+        await fetch(
+            "/save_trip",
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":"application/json"
+                },
+
+                body:JSON.stringify({
+                    trip_id:tripId
+                })
+            }
+        );
+
+        const data=
+        await response.json();
+
+        if(data.success){
+
+            button.innerHTML=
+            "✓ Saved";
+
+            button.disabled=true;
+
+        }else{
+
+            alert(
+                "Failed to save trip, Please log in or sign up"
+            );
+        }
+
+    }catch(error){
+
+        console.log(error);
+
+        alert(
+            "Error saving trip"
+        );
+    }
+
+}
+
+</script>

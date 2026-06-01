@@ -1,0 +1,33 @@
+<div class="container">
+    <h1>✈️ Smart Flight Deals</h1>
+
+    {% for trip in trips %}
+        <div class="trip-group">
+            <div class="trip-header">
+                {{ trip.departing_from }} → {{ trip.landing_in }}
+            </div>
+
+            <div class="cards">
+                {% for opt in trip.options %}
+                    <div class="card">
+                        {% if loop.index0 == 0 %}
+                            <div class="badge">Best Deal</div>
+                        {% endif %}
+
+                        <div class="price">${{ "%.2f"|format(opt.best_price) }}</div>
+
+                        <div class="route">
+                            {{ opt.route_name_actual_1 }} → {{ opt.route_name_actual_2 }}
+                        </div>
+
+                        <div class="meta">
+                            📅 {{ opt.route_1_date }} → {{ opt.route_2_date }}<br>
+                            🌍 {{ opt.route_1_going_from_iata }} → {{ opt.route_2_going_to_iata }}<br>
+                            📏 {{ opt.route_1_distance_km + opt.route_2_distance_km }} km
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>

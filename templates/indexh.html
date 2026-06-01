@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Cost Optimizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+
+.login-btn{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.6);
+}
+
+.modal-content{
+    width:350px;
+    background:white;
+    margin:8% auto;
+    padding:25px;
+    border-radius:12px;
+
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.close{
+    font-size:24px;
+    cursor:pointer;
+    margin-left:auto;
+}
+
+input{
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+.buttons{
+    display:flex;
+    gap:10px;
+}
+
+.buttons button{
+    flex:1;
+    padding:10px;
+    cursor:pointer;
+}
+
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white min-h-screen">
+
+
+<!-- Add this button anywhere -->
+
+{% if user %}
+
+<button
+class="login-btn"
+onclick="logout()"
+>
+{{user}} | Logout
+</button>
+
+{% else %}
+
+<button
+id="authBtn"
+class="login-btn"
+>
+Login / Sign Up
+</button>
+
+{% endif %}
+
+
+
+<div id="authModal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close">&times;</span>
+
+        <h2>Account</h2>
+
+        <input
+        id="email"
+        type="email"
+        placeholder="Email"
+        >
+
+        <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        >
+
+        <div class="buttons">
+
+            <button onclick="login()">
+                Login
+            </button>
+
+            <button onclick="signup()">
+                Sign Up
+            </button>
+
+        </div>
+
+        <div id="message"></div>
+
+    </div>
+
+</div>
+
+
+<div class="max-w-5xl mx-auto px-6 py-16">
+
+    <!-- Hero -->
+    <div class="text-center mb-14">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+            Optimize Your Travel Costs ✈️
+        </h1>
+        <p class="text-slate-400 text-lg">
+            Multi-city trip planning made intelligent.
+        </p>
+    </div>
+
+    <!-- Main Widget -->
+    <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl p-8 mb-20">
+
+        <h2 class="text-2xl font-semibold mb-8 text-sky-400">
+            Get Started
+        </h2>
+
+        <form method="POST" action="/submit">
+
+            <!-- Origin City -->
+            <div class="mb-8">
+                <label class="text-sm text-slate-400 block mb-4">
+                    Depart From
+                </label>
+
+                <div class="relative">
+                    <input
+                        type="text"
+                        placeholder="Enter departure city"
+                        autocomplete="off"
+                        class="origin-input bg-slate-800 border border-slate-700 w-full rounded-lg p-3 
+                               focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
+                    />
+
+                    <!-- Hidden origin fields -->
+                    <input type="hidden" name="origin_city" class="origin-name">
+                    <input type="hidden" name="origin_city_id" class="origin-id">
+
+                    <div class="origin-dropdown hidden absolute z-50 w-full mt-1 
+                                bg-slate-800 border border-slate-700 
+                                rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">Start Date</label>
+                    <input type="date" name="start_date"
+                        class="bg-slate-800 border border-slate-700 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">End Date</label>
+                    <input type="date" name="end_date"
+                        class="bg-slate-800 border border-slate-700 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+                </div>
+            </div>
+
+            <!-- Cities -->
+            <div class="mb-6">
+                <label class="text-sm text-slate-400 block mb-4">
+                    Cities You Want to Visit
+                </label>
+
+                <div id="city-container"
+                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                </div>
+
+                <button type="button"
+                        onclick="addCity()"
+                        class="mt-4 text-sky-400 hover:text-sky-300 transition">
+                    + Add another city
+                </button>
+            </div>
+
+            <!-- Nights -->
+            <div class="mb-10">
+                <label class="text-sm text-slate-400 block mb-2">
+                   Min Number of Nights
+                </label>
+                <input type="number" name="min_nights" min="1" required
+                       class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+            </div>
+
+
+            <!-- Nights -->
+            <div class="mb-10">
+                <label class="text-sm text-slate-400 block mb-2">
+                   Max Number of Nights
+                </label>
+                <input type="number" name="max_nights" min="1" required
+                       class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+            </div>
+
+            <div class="mb-10">
+                <label class="text-sm text-slate-400 block mb-2">
+                    Number of Adults
+                </label>
+                <input type="number" name="adults" min="1" required
+                       class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+            </div>
+
+            <div class="mb-10">
+                <label class="text-sm text-slate-400 block mb-2">
+                    Number of Children
+                </label>
+                <input type="number" name="children" min="0" required
+                       class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+            </div>
+
+            <div class="mb-10">
+                <label class="text-sm text-slate-400 block mb-2">
+                    Number of Infants
+                </label>
+                <input type="number" name="infants" min="0" required
+                       class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+            </div>
+
+        <div class="mb-10">
+            <label class="text-sm text-slate-400 block mb-2">
+                Travel Class
+            </label>
+
+            <select name="travel_class" required
+                    class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition text-white">
+                
+                <option value="" disabled selected>
+                    Select flight class
+                </option>
+
+                <option value="economy">
+                    Economy
+                </option>
+
+                <option value="premium_economy">
+                    Premium Economy
+                </option>
+
+                <option value="business">
+                    Business
+                </option>
+
+                <option value="first_class">
+                    First Class
+                </option>
+            </select>
+        </div>
+
+
+            <button type="submit"
+                    class="w-full bg-sky-500 hover:bg-sky-400 text-black font-semibold py-3 rounded-xl transition duration-200 shadow-lg hover:shadow-sky-500/20">
+                Optimize My Trip
+            </button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+let cityIndex = 0;
+
+/* ---------- Origin Autocomplete ---------- */
+function initOriginInput() {
+    const wrapper = document.querySelector(".origin-input").parentElement;
+    const input = wrapper.querySelector(".origin-input");
+    const dropdown = wrapper.querySelector(".origin-dropdown");
+    const hiddenName = wrapper.querySelector(".origin-name");
+    const hiddenId = wrapper.querySelector(".origin-id");
+
+    input.addEventListener("input", function () {
+        const query = input.value;
+
+        hiddenName.value = "";
+        hiddenId.value = "";
+
+        if (!query) {
+            dropdown.classList.add("hidden");
+            return;
+        }
+
+        fetch(`/search?q=${query}&n=5`)
+            .then(res => res.json())
+            .then(data => {
+                dropdown.innerHTML = "";
+
+                if (data.length === 0) {
+                    dropdown.classList.add("hidden");
+                    return;
+                }
+
+                data.forEach(city => {
+                    const option = document.createElement("div");
+                    option.textContent = city.name;
+                    option.className = `
+                        px-3 py-2 cursor-pointer 
+                        hover:bg-sky-500 hover:text-black 
+                        transition rounded-md
+                    `;
+
+                    option.addEventListener("click", () => {
+                        input.value = city.name;
+                        hiddenName.value = city.name;
+                        hiddenId.value = city.id;
+                        dropdown.classList.add("hidden");
+                    });
+
+                    dropdown.appendChild(option);
+                });
+
+                dropdown.classList.remove("hidden");
+            });
+    });
+
+    document.addEventListener("click", function(e) {
+        if (!wrapper.contains(e.target)) {
+            dropdown.classList.add("hidden");
+        }
+    });
+}
+
+/* ---------- Destination Cities ---------- */
+function addCity() {
+    const container = document.getElementById("city-container");
+
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("relative");
+
+    wrapper.innerHTML = `
+        <input
+            type="text"
+            placeholder="Enter city"
+            autocomplete="off"
+            class="city-input bg-slate-800 border border-slate-700 w-full rounded-lg p-3 
+                   focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
+        />
+
+        <input type="hidden" name="cities" class="city-name">
+        <input type="hidden" name="city_ids" class="city-id">
+
+        <div class="dropdown hidden absolute z-50 w-full mt-1 
+                    bg-slate-800 border border-slate-700 
+                    rounded-lg shadow-xl max-h-48 overflow-y-auto">
+        </div>
+    `;
+
+    container.appendChild(wrapper);
+
+    const input = wrapper.querySelector(".city-input");
+    const dropdown = wrapper.querySelector(".dropdown");
+    const hiddenName = wrapper.querySelector(".city-name");
+    const hiddenId = wrapper.querySelector(".city-id");
+
+    input.addEventListener("input", function () {
+        const query = input.value;
+
+        hiddenName.value = "";
+        hiddenId.value = "";
+
+        if (!query) {
+            dropdown.classList.add("hidden");
+            return;
+        }
+
+        fetch(`/search?q=${query}&n=5`)
+            .then(res => res.json())
+            .then(data => {
+                dropdown.innerHTML = "";
+
+                if (data.length === 0) {
+                    dropdown.classList.add("hidden");
+                    return;
+                }
+
+                data.forEach(city => {
+                    const option = document.createElement("div");
+                    option.textContent = city.name;
+                    option.className = `
+                        px-3 py-2 cursor-pointer 
+                        hover:bg-sky-500 hover:text-black 
+                        transition rounded-md
+                    `;
+
+                    option.addEventListener("click", () => {
+                        input.value = city.name;
+                        hiddenName.value = city.name;
+                        hiddenId.value = city.id;
+                        dropdown.classList.add("hidden");
+                    });
+
+                    dropdown.appendChild(option);
+                });
+
+                dropdown.classList.remove("hidden");
+            });
+    });
+
+    document.addEventListener("click", function(e) {
+        if (!wrapper.contains(e.target)) {
+            dropdown.classList.add("hidden");
+        }
+    });
+
+    cityIndex++;
+}
+
+/* ---------- Init ---------- */
+initOriginInput();
+for (let i = 0; i < 4; i++) {
+    addCity();
+}
+
+const modal =
+document.getElementById("authModal");
+
+const button =
+document.getElementById("authBtn");
+
+const close =
+document.querySelector(".close");
+
+
+if(button){
+
+button.onclick=()=>{
+    modal.style.display="block";
+};
+
+}
+
+
+close.onclick=()=>{
+    modal.style.display="none";
+};
+
+
+window.onclick=(e)=>{
+
+if(e.target===modal){
+    modal.style.display="none";
+}
+
+};
+
+
+async function login(){
+
+const email =
+document.getElementById("email").value;
+
+const password =
+document.getElementById("password").value;
+
+
+const response =
+await fetch("/login",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+email,
+password
+})
+
+});
+
+
+const data =
+await response.json();
+
+document.getElementById(
+"message"
+).innerText=
+data.message || "Logged in";
+
+
+if(data.success){
+
+location.reload();
+
+}
+
+}
+
+
+
+async function signup(){
+
+const email =
+document.getElementById("email").value;
+
+const password =
+document.getElementById("password").value;
+
+
+const response =
+await fetch("/signup",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+email,
+password
+})
+
+});
+
+
+const data =
+await response.json();
+
+document.getElementById(
+"message"
+).innerText=
+data.message;
+
+}
+
+
+
+async function logout(){
+
+await fetch("/logout");
+
+location.reload();
+
+}
+</script>
+
+</body>
+</html>

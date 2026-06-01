@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Saved Flights</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white min-h-screen relative">
+
+
+    
+{% macro render_trip_card(trip) %}
+<div
+class="bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden hover:border-purple-500 hover:-translate-y-1 transition duration-300 cursor-pointer"
+onclick="toggleDetails(this)"
+>
+
+<div class="flex justify-between items-center p-6">
+
+<div>
+
+<div class="flex items-center gap-3 mb-3">
+
+<div class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold">
+SAVED
+</div>
+
+</div>
+
+<div class="text-2xl font-bold">
+
+
+{{ trip.landing_in }}
+<span class="text-purple-400">
+→
+</span>
+
+{{ trip.departing_from }}
+
+</div>
+
+<div class="text-sm text-slate-400 mt-2">
+
+{{ trip.options|length }}
+ saved travel options
+
+</div>
+
+</div>
+
+
+<div>
+
+<div class="text-xs text-slate-500">
+Best Price
+</div>
+
+<div class="text-4xl font-black text-purple-400">
+
+${{ "%.0f"|format(trip.options[0].best_price) }}
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="route-details overflow-hidden max-h-0 transition-all duration-500">
+
+{% for opt in trip.options %}
+
+<div
+class="grid lg:grid-cols-2 gap-6 p-6 border-t border-slate-800"
+onclick="event.stopPropagation()"
+>
+
+<div>
+
+<div class="flex justify-between mb-5">
+
+<div class="text-xl font-bold">
+
+{{ opt.route_name_actual_1 }}
+→
+{{ opt.route_name_actual_2 }}
+
+</div>
+
+<div class="text-green-400 text-2xl font-black">
+
+${{ "%.0f"|format(opt.best_price) }}
+
+</div>
+
+</div>
+
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Departure</div>
+<div>{{opt.route_1_date}}</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Return</div>
+<div>{{opt.route_2_date}}</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Airports</div>
+<div>
+{{opt.route_1_going_from_iata}}
+→
+{{opt.route_2_going_to_iata}}
+</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Distance</div>
+
+<div>
+{{opt.total.dist}}
+<!-- {{ "%.0f"|format(
+opt.route_1_distance_km +
+opt.route_2_distance_km
+) }}
+
+km -->
+
+</div>
+
+</div>
+
+
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Extra Distance to {{ trip.landing_in }}</div>
+<div>{{opt.route_1_distance_km}}</div>
+</div>
+
+<div class="bg-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-1">Extra Distance to {{ trip.departing_from }}</div>
+<div>{{opt.route_2_distance_km}}</div>
+</div>
+
+
+
+</div>
+
+
+<div class="flex gap-3">
+
+<a
+href="{{ opt.link_outbound }}"
+target="_blank"
+class="flex-1 text-center bg-sky-500 hover:bg-sky-400 text-black font-bold py-3 rounded-xl transition"
+>
+✈ Outbound
+</a>
+
+
+<a
+href="{{ opt.link_return }}"
+target="_blank"
+class="flex-1 text-center bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition"
+>
+🔁 Return
+</a>
+
+
+<div
+class="flex-1 bg-purple-600/40 border border-purple-500 text-center py-3 rounded-xl font-bold text-purple-300"
+>
+✓ Saved
+</div>
+
+</div>
+
+</div>
+
+
+<div class="flex flex-col gap-3">
+
+<div class="h-[260px] rounded-2xl overflow-hidden map-preview">
+
+{{ opt.route_map|safe }}
+
+</div>
+
+<button
+onclick="openMap(event,this)"
+class="bg-slate-800 hover:bg-slate-700 rounded-xl py-3 transition"
+>
+Expand Map
+</button>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+{% endmacro %}
+
+
+
+<!-- AUTH BUTTON -->
+
+<div class="absolute top-6 right-6 z-40">
+
+{% if user %}
+
+<button
+onclick="logout()"
+class="px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-500 hover:bg-slate-700 transition text-sm font-medium shadow-lg"
+>
+{{user}} | Logout
+</button>
+
+{% endif %}
+
+</div>
+
+
+<div class="max-w-7xl mx-auto px-8 py-16">
+
+<div class="flex flex-wrap gap-4 mb-10">
+
+    <a
+        href="/"
+        class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-500 hover:bg-slate-700 transition font-medium"
+    >
+        🏠 New Serch
+    </a>
+
+    <a
+        href="/flights"
+        class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-purple-600/20 border border-purple-500 hover:bg-purple-600/30 transition font-medium text-purple-300"
+    >
+        🌍 Last Search
+    </a>
+
+</div>
+
+<!-- PAGE HEADER -->
+
+<div class="mb-14">
+
+<div class="inline-flex items-center gap-3 mb-5 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
+
+<span class="text-purple-400 text-lg">
+💾
+</span>
+
+<span class="text-purple-300 text-sm font-semibold tracking-wide uppercase">
+Your Flight Collection
+</span>
+
+</div>
+
+
+<h1 class="text-5xl md:text-6xl font-black tracking-tight mb-4">
+
+My Saved Flights
+
+</h1>
+
+<p class="text-lg text-slate-400 max-w-3xl">
+
+Keep track of flights you've bookmarked. Expand any trip to view routes,
+pricing details, and interactive maps.
+
+</p>
+
+
+<div class="mt-8 inline-flex items-center gap-4 bg-slate-900 border border-slate-800 rounded-2xl px-6 py-4">
+
+<div class="text-4xl">
+✈
+</div>
+
+<div>
+
+<div class="text-sm text-slate-500">
+Saved Trips
+</div>
+
+<div class="text-2xl font-bold text-sky-400">
+
+{{ trips|length }}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+{% if trips|length == 0 %}
+
+<div class="bg-slate-900 border border-slate-800 rounded-3xl p-16 text-center">
+
+<div class="text-6xl mb-6">
+🛫
+</div>
+
+<h2 class="text-3xl font-bold mb-4">
+No saved flights yet
+</h2>
+
+<p class="text-slate-400 max-w-xl mx-auto">
+Browse flight deals and save interesting routes to build your travel collection.
+</p>
+
+</div>
+
+{% else %}
+
+<div class="mt-8 flex flex-wrap gap-4 mb-12">
+
+<div class="bg-slate-900 border border-slate-800 rounded-2xl px-6 py-4">
+<div class="text-sm text-slate-500">Upcoming</div>
+<div class="text-2xl font-bold text-sky-400">{{ upcoming_trips|length }}</div>
+</div>
+
+<div class="bg-slate-900 border border-slate-800 rounded-2xl px-6 py-4">
+<div class="text-sm text-slate-500">Past</div>
+<div class="text-2xl font-bold text-purple-400">{{ past_trips|length }}</div>
+</div>
+
+</div>
+
+<div class="mb-16">
+
+<div class="flex items-center gap-4 mb-6">
+<div class="text-4xl">🛫</div>
+<div>
+<h2 class="text-3xl font-bold">Upcoming Trips</h2>
+<p class="text-slate-400">Future departures</p>
+</div>
+</div>
+
+{% if upcoming_trips %}
+<div class="grid md:grid-cols-2 gap-6">
+{% for trip in upcoming_trips %}
+{{ render_trip_card(trip) }}
+{% endfor %}
+</div>
+{% else %}
+<div class="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center">
+No upcoming trips
+</div>
+{% endif %}
+
+</div>
+
+<div>
+
+<div class="flex items-center gap-4 mb-6">
+<div class="text-4xl">🕘</div>
+<div>
+<h2 class="text-3xl font-bold">Past Trips</h2>
+<p class="text-slate-400">Previous departures</p>
+</div>
+</div>
+
+{% if past_trips %}
+<div class="grid md:grid-cols-2 gap-6">
+{% for trip in past_trips %}
+{{ render_trip_card(trip) }}
+{% endfor %}
+</div>
+{% else %}
+<div class="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center">
+No past trips
+</div>
+{% endif %}
+
+</div>
+
+{% endif %}
+
+</div>
+
+
+<!-- MAP MODAL -->
+
+<div
+id="mapModal"
+class="fixed inset-0 hidden items-center justify-center bg-black/80 z-[9999]"
+>
+
+<div class="w-[95vw] h-[90vh] bg-slate-900 rounded-3xl relative overflow-hidden">
+
+<button
+onclick="closeMap()"
+class="absolute top-4 right-4 h-12 w-12 rounded-full bg-slate-800 hover:bg-slate-700 z-50"
+>
+✕
+</button>
+
+<div id="modalMapContent" class="w-full h-full"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+function toggleDetails(card){
+
+const details =
+card.querySelector(".route-details");
+
+if(details.style.maxHeight){
+
+details.style.maxHeight = null;
+
+}else{
+
+details.style.maxHeight =
+details.scrollHeight + "px";
+
+}
+
+}
+
+
+function openMap(event,btn){
+
+event.stopPropagation();
+
+const html =
+btn.closest(".grid")
+.querySelector(".map-preview")
+.innerHTML;
+
+document.getElementById(
+"modalMapContent"
+).innerHTML = html;
+
+document.getElementById(
+"mapModal"
+).classList.remove("hidden");
+
+document.getElementById(
+"mapModal"
+).classList.add("flex");
+
+}
+
+
+function closeMap(){
+
+document.getElementById(
+"mapModal"
+).classList.remove("flex");
+
+document.getElementById(
+"mapModal"
+).classList.add("hidden");
+
+document.getElementById(
+"modalMapContent"
+).innerHTML="";
+
+}
+
+
+async function logout(){
+
+await fetch("/logout");
+
+location.reload();
+
+}
+
+</script>
+
+</body>
+</html>
