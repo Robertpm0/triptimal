@@ -9,3 +9,5 @@ selenium==4.44.0
 Shapely==2.1.2
 supabase==2.30.1
 webdriver_manager==4.0.2
+gunicorn
+psycopg2-binary
