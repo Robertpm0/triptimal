@@ -185,7 +185,7 @@ class Flight_Optimizer:
         valid_routes=[]
 
         for spot in best_to:
-            # print("actual")
+            print("actual")
             # print(spot.actual_name)
             # temp_route_organizer=Route_Cost_Container(spot.screen_name)
             for spot2 in best_away:
@@ -199,13 +199,13 @@ class Flight_Optimizer:
                     # temp_route_organizer.add_spot2(spot2.screen)
 
                     for route2 in spot2.routes:
-                        # print(route.date)
+                        print(route.date)
                         
-                        # print(route2.date)
+                        print(route2.date)
                         # if (n_days-1)<=abs((route2.date-route.date).days)<=(n_days+1):
                         if min_n<=abs((route2.date-route.date).days)<=max_n:
                             # print(spot.actual_name)
-                            # print("DATES")
+                            print("DATES")
                             # print(abs((route2.date-route.date).days))
                             # print(abs((route.date-route2.date).days))
                             # print(spot2.actual_name)
@@ -1092,7 +1092,7 @@ def get_flight_prices(frm,to,dates,n_best,is_going_to,max_distance_away,psgr,tra
 
     # print(len(results))
     return results,results2 
-def find_nearest_airports(lat, lng, gdf, n=6):
+def find_nearest_airports(lat, lng, gdf,max_dist, n=6):
     target_point = gpd.GeoSeries([Point(lng, lat)], crs="EPSG:4326")
 
     # project to metric CRS
@@ -1103,7 +1103,8 @@ def find_nearest_airports(lat, lng, gdf, n=6):
     dists = gdf_m.distance(target_m)
 
     # indices of n closest
-    idxs = dists.nsmallest(n).index
+    n_curr=n
+    idxs = dists.nsmallest(30).index
 
     # return IATA codes (list)
     airports=gdf.loc[idxs, "iata_code"].tolist()
@@ -1120,8 +1121,10 @@ def find_nearest_airports(lat, lng, gdf, n=6):
     d_new_airports4=[]
     d_new_airports5=[]
     
-    dist=dists.nsmallest(n)
+    dist=dists.nsmallest(30)
     for a,d in zip(airports,dist):
+        if int(d/1000) >max_dist:
+            continue
         if gdf[gdf["iata_code"]==a]["type"].values[0]=="international_airport":
             new_airports1.append(a)
             d_new_airports1.append(d)
@@ -1144,10 +1147,11 @@ def find_nearest_airports(lat, lng, gdf, n=6):
 
     new_airports=new_airports1+new_airports2+new_airports3+new_airports4+new_airports5
     d_new_airports=d_new_airports1+d_new_airports2+d_new_airports3+d_new_airports4+d_new_airports5
-
+    if len(new_airports)<n:
+        return new_airports,d_new_airports
     return new_airports[:n],d_new_airports[:n]
 
-def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc,opt,optional_iata=None):
+def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc,opt,optional_iata=None,max_dist_orig=150,max_dist=400,n_cities=4):
     # print("origin",origin)
     # print(len(cities_df))
     df = pd.read_csv("airports.csv")
@@ -1174,7 +1178,8 @@ def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc
     #     closest_idx = gdf_m.distance(target_m).idxmin()
     #     closest_row = gdf.loc[closest_idx]
 
-        origin_iata,dist=find_nearest_airports(origin_data.lat.values[0],origin_data.lng.values[0],gdf,n=3)
+        origin_iata,dist=find_nearest_airports(origin_data.lat.values[0],origin_data.lng.values[0],gdf,n=n_cities,max_dist=max_dist_orig)
+        print("ORIGS",origin_iata)
     else:
         origin_iata=[optional_iata]
         dist=[0]
@@ -1189,7 +1194,7 @@ def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc
         # print("ORIGIN",origin_iata)
         for cty in origin_iata:
             all_flights=[]
-            starting_city=cty# iata code
+            sc=cty# iata code
             to_cost=0
 
             # max_arrival_date=end_date-timedelta(days=num_days)
@@ -1202,56 +1207,61 @@ def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc
             to_names=[]
             from_names=[]
             delta_dists=[]
+            # for starting_city in origin_iata:
             for key in keys:
                 origin_data=cities_df[cities_df["id"]==int(key)]  
-                curr_iata,dist=find_nearest_airports(origin_data.lat.values[0],origin_data.lng.values[0],gdf,n=4)
+                curr_iata,dist=find_nearest_airports(origin_data.lat.values[0],origin_data.lng.values[0],gdf,n=n_cities+1,max_dist=max_dist)
+                
                 city_iata.extend(curr_iata)
                 actual_names.extend([origin_data.screen_name.values[0]]*len(curr_iata))
                 delta_dists.extend(dist)
-            min_n_flights2,min2=get_flight_prices(starting_city,city_iata,[start_date,max_arrival_date],6,True,400,passgr,tc,delta_dists)
-            ctr=0
-            # print("LEN_MIN2_0",len(min2))
+            for starting_city in origin_iata:
 
-            # print(len(min2))
-            # print(len(city_iata))
-            for arriv_city,actual_name in zip(city_iata,actual_names):
-                # print(arriv_city)
-                # print("start")
-                # print(actual_name)
-                # min_n_flights=get_flight_prices(starting_city,arriv_city,[start_date,max_arrival_date],6,True,400,passgr,tc)
+                min_n_flights2,min2=get_flight_prices(starting_city,city_iata,[start_date,max_arrival_date],6,True,400,passgr,tc,delta_dists)
+                ctr=0
+                # print("LEN_MIN2_0",len(min2))
 
-                # print("NUM FLIGHTS",len(min_n_flights))
-                # print("CITY: ",actual_name)
-                min_n_flights=min2[ctr]
-                min_n_flights=[x for x in min_n_flights if x is not None]
-                curr_trip= Flight_Possibilites(to=arriv_city,frm=starting_city) 
-                for flight in min_n_flights:
-                    curr_trip.add_route(flight)
-                # iata code
-                to_trips.append(curr_trip)
-                to_names.append(actual_name)
-                ctr+=1
+                # print(len(min2))
+                # print(len(city_iata))
+                for arriv_city,actual_name in zip(city_iata,actual_names):
+                    # print(arriv_city)
+                    # print("start")
+                    # print(actual_name)
+                    # min_n_flights=get_flight_prices(starting_city,arriv_city,[start_date,max_arrival_date],6,True,400,passgr,tc)
+
+                    # print("NUM FLIGHTS",len(min_n_flights))
+                    # print("CITY: ",actual_name)
+                    min_n_flights=min2[ctr]
+                    min_n_flights=[x for x in min_n_flights if x is not None]
+                    curr_trip= Flight_Possibilites(to=arriv_city,frm=starting_city) 
+                    for flight in min_n_flights:
+                        curr_trip.add_route(flight)
+                    # iata code
+                    to_trips.append(curr_trip)
+                    to_names.append(actual_name)
+                    ctr+=1
 
             print("STARTING FLIGHT HOME SEARCH")
             min_depart_date=start_date+timedelta(days=min_days)
+            for starting_city in origin_iata:
 
-            min_flights_depart2,min22=get_flight_prices(city_iata,starting_city,[min_depart_date,end_date],6,False,400,passgr,tc,delta_dists)
-            ctr=0
-            # print("LEN_MIN2",len(min22))
-            for depart_city,actual_name in zip(city_iata,actual_names):
-                # print("start back")
-                # print(actual_name)
-                # min_flights_depart=get_flight_prices(depart_city,starting_city,[min_depart_date,end_date],6,False,400,passgr,tc)
-                # print("NUM FLIGHTS",len(min_flights_depart))
-                min_flights_depart=min22[ctr]
-                min_flights_depart=[x for x in min_flights_depart if x is not None]
-                curr_trip=Flight_Possibilites(to=starting_city,frm=depart_city)
-                # print("TO",start)
-                for flight in min_flights_depart:
-                    curr_trip.add_route(flight)
-                from_trips.append(curr_trip)
-                from_names.append(actual_name)
-                ctr+=1
+                min_flights_depart2,min22=get_flight_prices(city_iata,starting_city,[min_depart_date,end_date],6,False,400,passgr,tc,delta_dists)
+                ctr=0
+                # print("LEN_MIN2",len(min22))
+                for depart_city,actual_name in zip(city_iata,actual_names):
+                    # print("start back")
+                    # print(actual_name)
+                    # min_flights_depart=get_flight_prices(depart_city,starting_city,[min_depart_date,end_date],6,False,400,passgr,tc)
+                    # print("NUM FLIGHTS",len(min_flights_depart))
+                    min_flights_depart=min22[ctr]
+                    min_flights_depart=[x for x in min_flights_depart if x is not None]
+                    curr_trip=Flight_Possibilites(to=starting_city,frm=depart_city)
+                    # print("TO",start)
+                    for flight in min_flights_depart:
+                        curr_trip.add_route(flight)
+                    from_trips.append(curr_trip)
+                    from_names.append(actual_name)
+                    ctr+=1
             # print(len(to_trips))
             # print("LLLL")
             # print(len(from_trips))
@@ -1701,6 +1711,27 @@ def submit():
     city_ids = request.form.getlist("city_ids")
     trav_class=request.form.get("travel_class")
 
+    departure_radius = request.form.get("departure_radius")
+    destination_radius = request.form.get("destination_radius")
+    nearby_cities = request.form.get("nearby_cities")
+    departure_radius = (
+        int(departure_radius)
+        if departure_radius
+        else 150
+    )
+
+    destination_radius = (
+        int(destination_radius)
+        if destination_radius
+        else 400
+    )
+
+    nearby_cities = (
+        int(nearby_cities)
+        if nearby_cities
+        else 3
+    )
+
     # remove empty entries (unselected inputs)
     cities = [c for c in cities if c]
     city_ids = [c for c in city_ids if c]
@@ -1709,7 +1740,7 @@ def submit():
     origin_city_id = request.form.get("origin_city_id")
     optional_iata=request.form.get("origin_airport_code")
     optional=False
-    if optional_iata is not None:
+    if optional_iata is not None and optional_iata!='':
         optional=True
     # passengers=request.form.get("passengers")
     adults=int(request.form.get("adults"))
@@ -1733,7 +1764,9 @@ def submit():
         city_coords.append((city_data.lat.values[0],city_data.lng.values[0]))
         coords_map[(city_data.lat.values[0],city_data.lng.values[0])]=city_data.screen_name.values[0]
     # print(origin_city_id)  # replace with optimizer logic
-    optimal_trips=optimal_find_trips(cities,city_ids,start_date,end_date,[int(min_nights),int(max_nights)],origin_city_id,passengers,trav_class,optional,optional_iata)
+    optimal_trips=optimal_find_trips(cities,city_ids,start_date,end_date,[int(min_nights) \
+            ,int(max_nights)],origin_city_id,passengers,trav_class,optional,optional_iata \
+            ,max_dist_orig=departure_radius,max_dist=destination_radius,n_cities=nearby_cities)
     # print(len(optimal_trips))
     print("NUM_FOUND",len(optimal_trips))
     # print("START")

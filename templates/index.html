@@ -358,6 +358,135 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
             </div>
 
 
+<!-- Advanced Search Toggle -->
+
+<div class="mt-8 border-t border-slate-800 pt-6">
+
+    <button
+        type="button"
+        id="advancedToggle"
+        class="flex items-center gap-3 text-sky-400 hover:text-sky-300 transition"
+    >
+        <span id="advancedArrow">▶</span>
+        Advanced Search Options
+    </button>
+
+    <div
+        id="advancedSection"
+        class="hidden mt-6 space-y-5"
+    >
+
+        <!-- Departure Radius -->
+
+        <div>
+
+            <label class="flex items-center gap-2 text-sm text-slate-400 mb-2">
+
+                Departure Search Radius
+
+                <span class="group relative cursor-help">
+
+                    ⓘ
+
+                    <span
+                        class="absolute left-6 top-0 hidden group-hover:block
+                               w-64 bg-slate-800 border border-slate-700
+                               rounded-lg p-3 text-xs text-slate-300 z-50"
+                    >
+                        Search nearby departure airports within this radius.
+                        Example: 100 miles allows nearby airports to be considered.
+                    </span>
+
+                </span>
+
+            </label>
+
+            <input
+                type="number"
+                name="departure_radius"
+                min="0"
+                placeholder="Example: 100"
+                class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3"
+            >
+
+        </div>
+
+
+        <!-- Destination Radius -->
+
+        <div>
+
+            <label class="flex items-center gap-2 text-sm text-slate-400 mb-2">
+
+                Destination Search Radius
+
+                <span class="group relative cursor-help">
+
+                    ⓘ
+
+                    <span
+                        class="absolute left-6 top-0 hidden group-hover:block
+                               w-64 bg-slate-800 border border-slate-700
+                               rounded-lg p-3 text-xs text-slate-300 z-50"
+                    >
+                        Search airports near each destination city.
+                        Useful when a nearby airport may be significantly cheaper.
+                    </span>
+
+                </span>
+
+            </label>
+
+            <input
+                type="number"
+                name="destination_radius"
+                min="0"
+                placeholder="Example: 75"
+                class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3"
+            >
+
+        </div>
+
+
+        <!-- Nearby Cities -->
+
+        <div>
+
+            <label class="flex items-center gap-2 text-sm text-slate-400 mb-2">
+
+                Nearby Cities To Consider
+
+                <span class="group relative cursor-help">
+
+                    ⓘ
+
+                    <span
+                        class="absolute left-6 top-0 hidden group-hover:block
+                               w-64 bg-slate-800 border border-slate-700
+                               rounded-lg p-3 text-xs text-slate-300 z-50"
+                    >
+                        For each destination, search this many nearby cities
+                        and compare flight costs across them.
+                    </span>
+
+                </span>
+
+            </label>
+
+            <input
+                type="number"
+                name="nearby_cities"
+                min="0"
+                placeholder="Example: 3"
+                class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3"
+            >
+
+        </div>
+
+    </div>
+
+</div>
+<!-- end advanced search -->
             <button
             type="submit"
             class="w-full mt-8 bg-sky-500 hover:bg-sky-400 text-black font-semibold py-3 rounded-xl transition duration-200 shadow-lg hover:shadow-sky-500/20"
@@ -769,6 +898,31 @@ tripForm?.addEventListener("submit", () => {
     }, 2500);
 
 });
+
+
+// start advanced toggle
+
+const advancedToggle =
+    document.getElementById("advancedToggle");
+
+const advancedSection =
+    document.getElementById("advancedSection");
+
+const advancedArrow =
+    document.getElementById("advancedArrow");
+
+advancedToggle?.addEventListener("click", () => {
+
+    advancedSection.classList.toggle("hidden");
+
+    if (advancedSection.classList.contains("hidden")) {
+        advancedArrow.textContent = "▶";
+    } else {
+        advancedArrow.textContent = "▼";
+    }
+
+});
+
 </script>
 
 </body>
