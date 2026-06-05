@@ -7,6 +7,9 @@ import pandas as pd
 import requests
 import pandas as pd
 from shapely.geometry import Point
+    # import time
+import random
+
 from amadeus import Client, ResponseError
 from selenium.webdriver.chrome.service import Service
 from selenium import webdriver
@@ -612,7 +615,15 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
 
     leaving_from = route.going_from_iata
     going_to = route.going_to_iata
+    # print(leaving_from)
 
+# Pause for a random duration between 5 and 15 seconds
+    time.sleep(random.uniform(5.0, 15.0))
+    # print(going_to)
+    # print(date)
+    # print(end_date)
+    # print(psgr)
+    # print(travel_class)
     # Preserve your cache behavior exactly
     for route2 in all_flights:
         if route2.to == going_to and route2.frm == leaving_from:
@@ -655,9 +666,9 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
         )
 
         search = SearchDates()
-
+        print("searching")
         results = search.search(filters)
-
+        print("done search")
         # results are DatePrice objects
         for result in results:
 
@@ -678,7 +689,8 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
 
                 all_routes.append(curr_route)
 
-            except Exception:
+            except Exception as e:
+                print(e)
                 continue
 
         temp = All_Routes(
@@ -695,7 +707,7 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
         print(e)
         return all_routes
 
-def cheapest_each_date_parallel(routes, dates,psgr,travel_class, max_workers=12):
+def cheapest_each_date_parallel(routes, dates,psgr,travel_class, max_workers=4):
     results = []
     sd=[]
     ed=[]
@@ -707,7 +719,7 @@ def cheapest_each_date_parallel(routes, dates,psgr,travel_class, max_workers=12)
     travel_class=[travel_class]*len(dates)
     print("NUMBER OF LINKS TO SCRAPE: ",len(psgrs))
     results2=[]
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
             for result in executor.map(get_flight_price, routes, sd,ed,psgrs,travel_class):
                 # result=[x for x in result if x is not None]
 
@@ -2073,15 +2085,16 @@ def submit():
     #     print(trip["options"][0])
     # session["trip_results"]=results
     # global trips_data
+    # if "trip_id" not in session:
     trip_id = str(uuid.uuid4())
+    session["trip_id"]=trip_id
 
     # trips_cache[trip_id] = results
     # trips_data=results
     # delete last trip this session saved if regenerating results
     # to try and optimise table size
-    if session.get("trip_id") is not None:
-        delete_last_trip()
-    session["trip_id"]=trip_id
+    # if session.get("trip_id") is not None:
+    #     delete_last_trip()
     # print(len(results))
     save_last_trip(results)
     # user=session.get("user")
@@ -2094,6 +2107,7 @@ def get_last_trip() -> list | None:
     Returns only the stored JSON trip_data.
     """
     trip_id=session.get("trip_id")
+    # print(trip_id)
     try:
         supabase=get_supabase()
     except:
@@ -2111,7 +2125,8 @@ def get_last_trip() -> list | None:
 
     if not response.data:
         return None
-
+    # print("good")
+    # print(response.data[0]["trip_data"])
     return response.data[0]["trip_data"]
 @app.route("/flights")
 def flights():
