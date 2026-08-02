@@ -11,12 +11,12 @@ from shapely.geometry import Point
 import random
 from flask import Flask, render_template, request, jsonify, session
 from supabase import create_client
-from amadeus import Client, ResponseError
+# from amadeus import Client, ResponseError
 from selenium.webdriver.chrome.service import Service
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import date as dt_date
 from datetime import datetime,timedelta
