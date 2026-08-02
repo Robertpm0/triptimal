@@ -2142,7 +2142,8 @@ def submit():
                     "type": travel_type
                 })
 
-            curr_map = build_map(route_data)
+            # curr_map = build_map(route_data)
+            curr_map=[]
 
             # print("____________________________________________________")
             # print(".........")
