@@ -9,7 +9,8 @@ import pandas as pd
 from shapely.geometry import Point
     # import time
 import random
-
+from flask import Flask, render_template, request, jsonify, session
+from supabase import create_client
 from amadeus import Client, ResponseError
 from selenium.webdriver.chrome.service import Service
 from selenium import webdriver
@@ -27,6 +28,33 @@ import difflib
 from collections import defaultdict
 import uuid
 import geopandas as gpd
+from flask import Flask, request, jsonify, session
+from flask_mail import Mail, Message
+import json
+import zstandard as zstd
+import base64
+
+compressor = zstd.ZstdCompressor(level=10)
+
+def compress_trip(results):
+    json_bytes = json.dumps(
+        results,
+        separators=(",", ":"),
+        ensure_ascii=False
+    ).encode("utf-8")
+
+    compressed = compressor.compress(json_bytes)
+
+    return base64.b64encode(compressed).decode("ascii")
+
+
+decompressor = zstd.ZstdDecompressor()
+
+def decompress_trip(data):
+    compressed = base64.b64decode(data)
+    json_bytes = decompressor.decompress(compressed)
+    return json.loads(json_bytes.decode("utf-8"))
+
 '''
 algorithm:
 for each city in cities to go to
@@ -35,9 +63,8 @@ for each city in cities to go to
     for each city in cities to go to
         find routes < desired window time from takeoff loc to cities to go to
  
-
-
 '''
+
 # amadeus = Client(
 #     client_id="vFAnLBDXF7IGZI4TYSfau1WqikrAiLJ4",
 #     client_secret="LH6NEq7YBdStt2hP"
@@ -48,9 +75,27 @@ cities_df["screen_name"]=cities_df["city"]+"_"+cities_df["country"]+"_"+cities_d
 ITEMS=cities_df['city_uid']=cities_df["city"]+"_"+cities_df["country"]+"_"+cities_df["id"].astype(str)+"_"+cities_df["admin_name"]
 ITEMS=ITEMS.dropna()
 ITEMS=ITEMS.values
-app = Flask(__name__)
 # trips_cache={}
+from search_manager import initialize_slots,acquire_search_slot,release_search_slot
+from config import SEARCH_WORKERS
 
+app = Flask(__name__)
+initialize_slots()
+# from search_manager import acquire_search_slot, release_search_slot
+
+
+
+# initialize_slots()
+app.config.update(
+    MAIL_SERVER="smtp.gmail.com",
+    MAIL_PORT=587,
+    MAIL_USE_TLS=True,
+    MAIL_USERNAME="triptimalresults@gmail.com",
+    MAIL_PASSWORD=os.getenv("GOOGLE_PASS"), #"your_google_app_password",
+    MAIL_DEFAULT_SENDER="triptimalresults@gmail.com"
+)
+
+mail = Mail(app)
 def get_flight_routes(going_from_icao,max_distance_km=None):
     r=requests.get(f"https://www.airportroutes.com/api/routes/?icao={going_from_icao}")#{going_from_icao}")
     jsn=r.json()
@@ -188,7 +233,7 @@ class Flight_Optimizer:
         valid_routes=[]
 
         for spot in best_to:
-            print("actual")
+            # print("actual")
             # print(spot.actual_name)
             # temp_route_organizer=Route_Cost_Container(spot.screen_name)
             for spot2 in best_away:
@@ -202,13 +247,13 @@ class Flight_Optimizer:
                     # temp_route_organizer.add_spot2(spot2.screen)
 
                     for route2 in spot2.routes:
-                        print(route.date)
+                        # print(route.date)
                         
-                        print(route2.date)
+                        # print(route2.date)
                         # if (n_days-1)<=abs((route2.date-route.date).days)<=(n_days+1):
                         if min_n<=abs((route2.date-route.date).days)<=max_n:
                             # print(spot.actual_name)
-                            print("DATES")
+                            # print("DATES")
                             # print(abs((route2.date-route.date).days))
                             # print(abs((route.date-route2.date).days))
                             # print(spot2.actual_name)
@@ -228,7 +273,7 @@ class Flight_Optimizer:
 # def cheapest_on_date(origin, dest, date):
 #     try:
 #         resp = amadeus.shopping.flight_offers_search.get(
-#             originLocationCode=origin,
+#             originLocationCode= origin,
 #             destinationLocationCode=dest,
 #             departureDate=date,
 #             adults=1,
@@ -416,6 +461,7 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
 
     leaving_from=route.going_from_iata
     going_to=route.going_to_iata
+    # print("here")
     for route2 in all_flights:
         if route2.to==going_to and route2.frm==leaving_from:
             return route2.route
@@ -439,9 +485,11 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
     # print("go")
     # driver.get(f"https://www.google.com/travel/flights?q=Flights%20from%20{leaving_from}%20to%20{going_to}%20on%20{date_str}%20one%20way")
     passengers = psgr
+    # print("here2")
     adults=passengers[0]
     children=passengers[1]
     infants=passengers[2]
+    # print("here3")
     # driver.get(
     #     f"https://www.google.com/travel/flights?q="
     #     f"{passengers}%20passengers%20Flights%20from%20"
@@ -497,6 +545,7 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
     all_page_text = body_element.text
     # print(all_page_text)
     # print("AFDASD", driver.find_element(By.XPATH,"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[2]/div/div[2]/div[3]/ul/li[1]/div/div[2]/div/div[7]/div").text)
+    # print("here4")
     try:
         if going_to not in all_page_text or leaving_from not in all_page_text:
             return all_routes
@@ -507,6 +556,7 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
         cals2=cals.find_elements(By.XPATH, '//*[@role="rowgroup"]')
     except:
         return all_routes
+    # print("here5t")
     num_months=diff_month(end_date,date)
     curr_month =range(start_month,start_month+num_months+2)
     mo_idx=0
@@ -517,6 +567,7 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
     #     print(c.text)
     # print(len(cals2))
     # print(curr_month)
+    # print("here6")
     for calendar in cals2:#range(0,len(curr_month)):
         # calendar=cals2[mo_idx].text
         calendar=calendar.text
@@ -531,6 +582,7 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
 
         # print(calendar.split("\n"))
         calendar_idx=1
+        # print("here7")
         for day in calendar.split("\n"):
             # print("s",day)
             # if day ==calendar.split("\n")[-2]:
@@ -558,8 +610,10 @@ def get_flight_price(route,date,end_date,psgr,travel_class):
 
                 # print("active")
                 start=True
+            
             if start==True:
-                print(calendar.split("\n"))
+
+                # print(calendar.split("\n"))
                 try:
                     if "$" in calendar.split("\n")[calendar_idx]:
                         if "k" in calendar.split("\n")[calendar_idx].replace("$","").replace(",","").lower() or "K" in calendar.split("\n")[calendar_idx].replace("$","").replace(",",""):
@@ -625,6 +679,7 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
     # print(psgr)
     # print(travel_class)
     # Preserve your cache behavior exactly
+    # print("here")
     for route2 in all_flights:
         if route2.to == going_to and route2.frm == leaving_from:
             return route2.route
@@ -632,7 +687,7 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
     adults = psgr[0]
     children = psgr[1]
     infants = psgr[2]
-
+    # print("here2")
     seat_type_map = {
         "economy": SeatType.ECONOMY,
         "premium_economy": SeatType.PREMIUM_ECONOMY,
@@ -664,12 +719,14 @@ def get_flight_price(route, date, end_date, psgr, travel_class):
                 SeatType.ECONOMY,
             ),
         )
-
+        # print("here2")
         search = SearchDates()
-        print("searching")
+        # print("searching")
+        # print("here1")
         results = search.search(filters)
-        print("done search")
+        # print("done search")
         # results are DatePrice objects
+        # print("here")
         for result in results:
 
             try:
@@ -719,13 +776,13 @@ def cheapest_each_date_parallel(routes, dates,psgr,travel_class, max_workers=4):
     travel_class=[travel_class]*len(dates)
     print("NUMBER OF LINKS TO SCRAPE: ",len(psgrs))
     results2=[]
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
             for result in executor.map(get_flight_price, routes, sd,ed,psgrs,travel_class):
                 # result=[x for x in result if x is not None]
 
                 results.extend(result)
                 results2.append(result)
-    print("LEN REYSKTS",len(results2))
+    # print("LEN REYSKTS",len(results2))
     return results,results2
 # import asyncio
 # from datetime import timedelta
@@ -968,7 +1025,7 @@ def cheapest_each_date_parallel(routes, dates,psgr,travel_class, max_workers=4):
 #     return results
     # return sorted(results, key=lambda x: x["date"])4
 
-def get_flight_prices(frm,to,dates,n_best,is_going_to,max_distance_away,psgr,travel_class,dists):
+def get_flight_prices(frm,to,dates,n_best,is_going_to,max_distance_away,psgr,travel_class,dists,max_workers):
 
     # get the routes
     # check if we are going to our vacation
@@ -1075,7 +1132,7 @@ def get_flight_prices(frm,to,dates,n_best,is_going_to,max_distance_away,psgr,tra
     going_to_routes=going_to_routes
     # print(len(going_to_routes))
 
-    results,results2=cheapest_each_date_parallel(going_to_routes,all_dates,psgr,travel_class)
+    results,results2=cheapest_each_date_parallel(going_to_routes,all_dates,psgr,travel_class,max_workers)
     # print(len(results2))
     # for date in dates:
 
@@ -1163,7 +1220,7 @@ def find_nearest_airports(lat, lng, gdf,max_dist, n=6):
         return new_airports,d_new_airports
     return new_airports[:n],d_new_airports[:n]
 
-def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc,opt,optional_iata=None,max_dist_orig=150,max_dist=400,n_cities=4):
+def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc,opt,optional_iata=None,max_dist_orig=150,max_dist=400,n_cities=4,max_workers=4):
     # print("origin",origin)
     # print(len(cities_df))
     df = pd.read_csv("airports.csv")
@@ -1229,7 +1286,7 @@ def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc
                 delta_dists.extend(dist)
             for starting_city in origin_iata:
 
-                min_n_flights2,min2=get_flight_prices(starting_city,city_iata,[start_date,max_arrival_date],6,True,400,passgr,tc,delta_dists)
+                min_n_flights2,min2=get_flight_prices(starting_city,city_iata,[start_date,max_arrival_date],6,True,400,passgr,tc,delta_dists,max_workers)
                 ctr=0
                 # print("LEN_MIN2_0",len(min2))
 
@@ -1257,7 +1314,7 @@ def optimal_find_trips(cities,keys,start_date,end_date,num_days,origin,passgr,tc
             min_depart_date=start_date+timedelta(days=min_days)
             for starting_city in origin_iata:
 
-                min_flights_depart2,min22=get_flight_prices(city_iata,starting_city,[min_depart_date,end_date],6,False,400,passgr,tc,delta_dists)
+                min_flights_depart2,min22=get_flight_prices(city_iata,starting_city,[min_depart_date,end_date],6,False,400,passgr,tc,delta_dists,max_workers)
                 ctr=0
                 # print("LEN_MIN2",len(min22))
                 for depart_city,actual_name in zip(city_iata,actual_names):
@@ -1550,18 +1607,46 @@ def build_map(routes):
 AVIASALES_MARKER = "719019"
 
 
+# def format_aviasales_date(date_str):
+#     """
+#     Converts:
+#     YYYY-MM-DD -> DDMM
+
+#     Example:
+#     2026-09-14 -> 1409
+#     """
+#     print(date_str)
+#     dt = datetime.strptime(date_str, "%Y-%m-%d")
+#     return dt.strftime("%d%m")
+
+# from datetime import datetime
+
+# def format_aviasales_date(date_str):
+#     """
+#     Converts:
+#     YYYY-MM-DD HH:MM:SS -> DDMM
+
+#     Example:
+#     2026-12-02 00:00:00 -> 0212
+#     """
+#     print(date_str)
+#     dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+#     return dt.strftime("%d%m")
+
+
+# from datetime import datetime
+
 def format_aviasales_date(date_str):
     """
     Converts:
-    YYYY-MM-DD -> DDMM
+    YYYY-MM-DD HH:MM:SS -> YYYY-MM-DD
 
     Example:
-    2026-09-14 -> 1409
+    2026-12-02 00:00:00 -> 2026-12-02
     """
-    dt = datetime.strptime(date_str, "%Y-%m-%d")
-    return dt.strftime("%d%m")
-
-
+    # print(date_str)
+    dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+    return dt.strftime("%Y-%m-%d")
 # def generate_one_way_aviasales_link(
 #     origin,
 #     destination,
@@ -1604,7 +1689,7 @@ def generate_one_way_aviasales_link(
     - first_class
     """
 
-    depart = depart_date#format_aviasales_date(depart_date)
+    depart = format_aviasales_date(depart_date)
 
     # Convert UI value -> Aviasales value
     # AVIASALES_FLIGHT_CLASS_MAP = {
@@ -1665,8 +1750,17 @@ def delete_last_trip() -> bool:
 
 
 def save_last_trip(trips):
+    # print(trips)
+    # trips=trips[:4]
 
+    # print(len(trips))
+    # print("__________________")
     trip_id=session.get("trip_id")
+    print("TRIP_ID",trip_id)
+    # print(trip_id)
+    compressed = compress_trip(trips)
+
+
     try:
         supabase=get_supabase()
     except:
@@ -1675,16 +1769,21 @@ def save_last_trip(trips):
         os.getenv("SUPABASE_URL"),
         os.getenv("SUPABASE_KEY")
     )  
-    response = (
-        supabase.table("last_trips")
-        .upsert(
-            {
-                "trip_id": trip_id,
-                "trip_data": trips
-            }
-        )
-        .execute()
-    )
+        
+    response=supabase.table("last_trips").insert({
+        "trip_id": trip_id,
+        "trip_data_compressed": compressed
+    }).execute()
+    # response = (
+    #     supabase.table("last_trips")
+    #     .insert(
+    #         {
+    #             "trip_id": trip_id,
+    #             "trip_data": trips
+    #         }
+    #     )
+    #     .execute()
+    # )
 
 
 # def save_trip(trip_id: str, trip_data: list) -> dict:
@@ -1715,9 +1814,13 @@ def save_last_trip(trips):
 def submit():
     print("START",dt.datetime.now())
     print("TOK",session.get("access_token"))
+    trip_id = str(uuid.uuid4())
+    session["trip_id"]=trip_id
+    print(trip_id)
     start_date = request.form.get("start_date")
     end_date = request.form.get("end_date")
     min_nights = request.form.get("min_nights")
+
     max_nights=request.form.get("max_nights")
     cities = request.form.getlist("cities")
     city_ids = request.form.getlist("city_ids")
@@ -1756,11 +1859,26 @@ def submit():
         optional=True
     # passengers=request.form.get("passengers")
     adults=int(request.form.get("adults"))
-    children=int(request.form.get("children"))
-    infants=int(request.form.get("infants"))
+    try:
+        children=int(request.form.get("children"))
+    except:
+        children=0
+    try:
+        infants=int(request.form.get("infants"))
+    except:
+        infants=0
+
+
     passengers=[adults,children,infants]
 
     # Example: build trip request object
+    min_nights=int(min_nights)
+    try:
+        max_nights=int(max_nights)
+    except:
+        max_nights=min_nights
+    if min_nights>max_nights:
+        max_nights=min_nights
     trip = {
         "start_date": start_date,
         "end_date": end_date,
@@ -1776,11 +1894,62 @@ def submit():
         city_coords.append((city_data.lat.values[0],city_data.lng.values[0]))
         coords_map[(city_data.lat.values[0],city_data.lng.values[0])]=city_data.screen_name.values[0]
     # print(origin_city_id)  # replace with optimizer logic
-    optimal_trips=optimal_find_trips(cities,city_ids,start_date,end_date,[int(min_nights) \
-            ,int(max_nights)],origin_city_id,passengers,trav_class,optional,optional_iata \
-            ,max_dist_orig=departure_radius,max_dist=destination_radius,n_cities=nearby_cities)
+    print("cities:", cities)
+    print("city_ids:", city_ids)
+    print("start_date:", start_date)
+    print("end_date:", end_date)
+    print("min_nights:", min_nights)
+    print("max_nights:", max_nights)
+    print("nights_range:", [int(min_nights), int(max_nights)])
+    print("origin_city_id:", origin_city_id)
+    print("passengers:", passengers)
+    print("trav_class:", trav_class)
+    print("optional:", optional)
+    print("optional_iata:", optional_iata)
+    print("departure_radius:", departure_radius)
+    print("destination_radius:", destination_radius)
+    print("nearby_cities:", nearby_cities)
+
+
+    # search_token = acquire_search_slot()
+    search_token=acquire_search_slot()
+
+
+    try:
+
+        optimal_trips = optimal_find_trips(
+            cities,
+            city_ids,
+            start_date,
+            end_date,
+            [int(min_nights), int(max_nights)],
+            origin_city_id,
+            passengers,
+            trav_class,
+            optional,
+            optional_iata,
+
+            max_dist_orig=departure_radius,
+            max_dist=destination_radius,
+            n_cities=nearby_cities,
+
+            max_workers=SEARCH_WORKERS
+        )
+
+
+    finally:
+
+        release_search_slot(
+            search_token
+        )
+        # release_search_slot()
+
+    # function which calls multirpocessing 
+    # optimal_trips=optimal_find_trips(cities,city_ids,start_date,end_date,[int(min_nights) \
+            # ,int(max_nights)],origin_city_id,passengers,trav_class,optional,optional_iata \
+            # ,max_dist_orig=departure_radius,max_dist=destination_radius,n_cities=nearby_cities)
     # print(len(optimal_trips))
-    print("NUM_FOUND",len(optimal_trips))
+    # print("NUM_FOUND",len(optimal_trips))
     # print("START")
     # results=[]
     airports_df=pd.read_csv("airports.csv")
@@ -1954,7 +2123,7 @@ def submit():
 
                 if distance[r] > 900:
                     travel_type = "plane"
-                elif distance[r] > 50:
+                elif distance[r] > 60:
                     travel_type = "train"
                 else:
                     travel_type = "taxi/car"
@@ -2086,8 +2255,7 @@ def submit():
     # session["trip_results"]=results
     # global trips_data
     # if "trip_id" not in session:
-    trip_id = str(uuid.uuid4())
-    session["trip_id"]=trip_id
+
 
     # trips_cache[trip_id] = results
     # trips_data=results
@@ -2096,18 +2264,24 @@ def submit():
     # if session.get("trip_id") is not None:
     #     delete_last_trip()
     # print(len(results))
+    # try:
     save_last_trip(results)
+    # except:
+    #     user=session.get("user")
+    #     return render_template("flights.html", trips=results,user=user)
+
+
     # user=session.get("user")
     print("END",dt.datetime.now())
-
     return redirect(url_for("flights"))
 
 def get_last_trip() -> list | None:
     """
     Returns only the stored JSON trip_data.
     """
+    time.sleep(6)
     trip_id=session.get("trip_id")
-    # print(trip_id)
+    print("ID",trip_id)
     try:
         supabase=get_supabase()
     except:
@@ -2116,18 +2290,36 @@ def get_last_trip() -> list | None:
         os.getenv("SUPABASE_URL"),
         os.getenv("SUPABASE_KEY")
     )  
-    response = (
-        supabase.table("last_trips")
-        .select("trip_data")
-        .eq("trip_id", trip_id)
-        .execute()
-    )
+    # response = (
+    #     supabase.table("last_trips")
+    #     .select("trip_data")
+    #     .eq("trip_id", trip_id)
+    #     .execute()
+    # )
 
+    # response = (
+    #     supabase.table("last_trips")
+    #     .select("trip_data")
+    #     .eq("trip_id", trip_id)
+    #     .execute()
+    # )
+
+    response = (
+    supabase.table("last_trips")
+    .select("trip_data_compressed")
+    .eq("trip_id", trip_id)
+    .execute()
+)
     if not response.data:
         return None
+    results = decompress_trip(
+    response.data[0]["trip_data_compressed"]
+    )
     # print("good")
-    # print(response.data[0]["trip_data"])
-    return response.data[0]["trip_data"]
+    # return (response.data[0]["trip_data"])
+    return results
+
+
 @app.route("/flights")
 def flights():
     # global trips_data
@@ -2140,6 +2332,67 @@ def flights():
 # print(len(results))
     user=session.get("user")
     return render_template("flights.html", trips=td,user=user)
+
+@app.route("/flights_backup")
+def flights_backup(td):
+    # global trips_data
+    # try:
+
+        # td=trips_cache[session.get("trip_id")]
+    # td=get_last_trip()
+    # except:
+        # td=[]
+# print(len(results))
+    user=session.get("user")
+    return render_template("flights.html", trips=td,user=user)
+
+
+def get_last_trip_email(trip_id) -> list | None:
+    """
+    Returns only the stored JSON trip_data.
+    """
+    # trip_id=session.get("trip_id")
+    # print(trip_id)
+    # try:
+    #     supabase=get_supabase()
+    # except:
+
+    #     supabase = create_client(
+    #     os.getenv("SUPABASE_URL"),
+    #     os.getenv("SUPABASE_KEY")
+    # )  
+    # response = (
+    #     supabase.table("last_trips")
+    #     .select("trip_data_compressed")
+    #     .eq("trip_id", trip_id)
+    #     .execute()
+    # )
+    td=get_last_trip()
+    return td
+    # if not response.data:
+    #     return None
+    # print("good")
+    # print(response.data[0]["trip_data"])
+    # return response.data[0]["trip_data"]
+
+
+
+@app.route("/flights_email/<trip_id>")
+def flights_email(trip_id):
+    # global trips_data
+    # try:
+    user=session.get("user")
+
+        # td=trips_cache[session.get("trip_id")]
+    td=get_last_trip_email(trip_id)
+    if td is None:
+        return render_template("flights_no_data.html",user=user)
+    # except:
+        # td=[]
+# print(len(results))
+    # user=ses5sion.get("user")
+    return render_template("flights.html", trips=td,user=user)
+
 
     # for trip in optimal_trips:
     #     optimised_n_trips = trip.get_n_best(3)
@@ -2244,8 +2497,7 @@ def flights():
 
 
 
-from flask import Flask, render_template, request, jsonify, session
-from supabase import create_client
+
 
 # app = Flask(__name__)
 app.secret_key = "your-secret-key"
@@ -2492,6 +2744,65 @@ def open_saved_flights():
     #     trips=results
     # )
 
+@app.route("/send-results-email", methods=["POST"])
+def send_results_email():
 
-if __name__ == "__main__":
-    app.run()
+    # if "user_email" not in session:
+    #     return jsonify({
+    #         "success": False,
+    #         "message": "Please log in first."
+    #     }), 401
+    if "user" not in session:
+        return jsonify({
+            "success": False,
+            "message": "Please log in first."
+        }), 401
+
+    # data = request.get_json()
+    session["send_email"]=True
+    # result_url = data.get("url")
+    result_url=url_for("flights_email",trip_id=session.get("trip_id"),_external=True)
+    # result_url=f"www.triptimal.com"
+    if not result_url:
+        return jsonify({
+            "success": False,
+            "message": "No result URL provided."
+        }), 400
+
+    # try:
+
+    msg = Message(
+        subject="Your Travel Optimizer Results",
+        recipients=[session["user"]]
+    )
+
+    msg.body = f"""
+Your travel optimization results are ready.
+
+View your results here:
+
+{result_url}
+
+Thank you for using Travel Cost Optimizer.
+"""
+
+    mail.send(msg)
+
+    return jsonify({
+        "success": True,
+        "message": "Email sent successfully."
+    })
+
+    # except Exception as e:
+
+    #     print(e)
+
+    #     return jsonify({
+    #         "success": False,
+    #         "message": "Failed to send email."
+    #     }), 500
+
+
+# use for local testing only
+# if __name__ == "__main__":
+#     app.run(threaded=True)

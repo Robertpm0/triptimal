@@ -10,7 +10,6 @@
 <body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white min-h-screen relative">
 
 <!-- AUTH BUTTON -->
-
 <div class="absolute top-6 right-6 z-40">
 
 {% if user %}
@@ -41,13 +40,13 @@ shadow-lg hover:shadow-sky-500/30"
 
 </div>
 
-
 <!-- AUTH MODAL -->
-
 <div
 id="authModal"
-class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/70 backdrop-blur-sm"
+class="fixed inset-0 z-[100000] hidden flex items-center justify-center bg-black/70 backdrop-blur-sm"
 >
+<!-- id="authModal"
+class="fixed inset-0 z-[100000] hidden flex ... -->
 
     <div class="relative w-full max-w-md mx-4 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl p-8">
 
@@ -68,82 +67,54 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
 
         <div class="space-y-4">
 
-            <input
-            id="email"
-            type="email"
-            placeholder="Email"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
-            >
+            <input id="email" type="email" placeholder="Email"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-sky-500">
 
-            <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
-            >
+            <input id="password" type="password" placeholder="Password"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-sky-500">
 
             <div class="grid grid-cols-2 gap-3">
 
-                <button
-                onclick="login()"
-                class="bg-sky-500 hover:bg-sky-400 text-black font-semibold py-3 rounded-xl transition"
-                >
+                <button onclick="login()"
+                    class="bg-sky-500 hover:bg-sky-400 text-black font-semibold py-3 rounded-xl">
                     Login
                 </button>
 
-                <button
-                onclick="signup()"
-                class="bg-slate-800 border border-slate-700 hover:border-sky-500 py-3 rounded-xl transition"
-                >
+                <button onclick="signup()"
+                    class="bg-slate-800 border border-slate-700 hover:border-sky-500 py-3 rounded-xl">
                     Sign Up
                 </button>
 
             </div>
 
-            <div
-            id="message"
-            class="text-sm text-center text-slate-400 pt-2"
-            ></div>
+            <div id="message" class="text-sm text-center text-slate-400 pt-2"></div>
 
         </div>
-
     </div>
-
 </div>
-
-
 
 <div class="max-w-5xl mx-auto px-6 py-16">
 
-    <!-- Hero -->
-
+    <!-- HERO -->
     <div class="text-center mb-14">
-
-        <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
             Optimize Your Travel Costs ✈️
         </h1>
-
         <p class="text-slate-400 text-lg">
             Multi-city trip planning made intelligent.
         </p>
-
     </div>
 
-
-    <!-- Main Widget -->
-
-    <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl p-8 mb-20">
-
-        <h2 class="text-2xl font-semibold mb-8 text-sky-400">
-            Get Started
-        </h2>
+    <!-- FORM -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8">
 
         <form id="tripForm" method="POST" action="/submit">
 
-           <div class="mb-8">
+            <!-- (YOUR ENTIRE FORM UNCHANGED — omitted here for brevity) -->
+   <div class="mb-8">
 
     <label class="text-sm text-slate-400 block mb-4">
-        Depart From
+        Enter the City You Want to Leave From
     </label>
 
     <!-- Option 1: City Search -->
@@ -211,11 +182,12 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                 <div>
 
                     <label class="text-sm text-slate-400 block mb-2">
-                        Start Date
+                        Search Start Date
                     </label>
 
                     <input
                     type="date"
+                    required
                     name="start_date"
                     class="bg-slate-800 border border-slate-700 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
                     >
@@ -230,6 +202,7 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
 
                     <input
                     type="date"
+                    required
                     name="end_date"
                     class="bg-slate-800 border border-slate-700 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
                     >
@@ -273,6 +246,7 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                     </label>
 
                     <input
+                    id="minNights"
                     type="number"
                     name="min_nights"
                     min="1"
@@ -287,10 +261,10 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                     </label>
 
                     <input
+                    id="maxNights"
                     type="number"
                     name="max_nights"
                     min="1"
-                    required
                     class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                 </div>
@@ -311,28 +285,27 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
 
                 <div>
                     <label class="text-sm text-slate-400 block mb-2">
-                        Children
+                        Children (optional)
                     </label>
 
                     <input
                     type="number"
                     name="children"
                     min="0"
-                    required
+                    
                     class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                 </div>
 
                 <div>
                     <label class="text-sm text-slate-400 block mb-2">
-                        Infants
+                        Infants (optional)
                     </label>
 
                     <input
                     type="number"
                     name="infants"
                     min="0"
-                    required
                     class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                 </div>
@@ -432,11 +405,8 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                         Search airports near each destination city.
                         Useful when a nearby airport may be significantly cheaper.
                     </span>
-
                 </span>
-
             </label>
-
             <input
                 type="number"
                 name="destination_radius"
@@ -444,7 +414,6 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                 placeholder="Example: 75"
                 class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3"
             >
-
         </div>
 
 
@@ -468,11 +437,8 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                         For each destination, search this many nearby cities
                         and compare flight costs across them.
                     </span>
-
                 </span>
-
             </label>
-
             <input
                 type="number"
                 name="nearby_cities"
@@ -480,11 +446,8 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
                 placeholder="Example: 3"
                 class="bg-slate-800 border border-slate-700 w-full rounded-lg p-3"
             >
-
         </div>
-
     </div>
-
 </div>
 <!-- end advanced search -->
             <button
@@ -495,37 +458,44 @@ class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/7
             </button>
 
         </form>
-
     </div>
-
 </div>
 <!-- LOADING OVERLAY -->
-
-<div
-id="loadingOverlay"
-class="hidden fixed inset-0 z-[99999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center"
->
-
+<div id="loadingOverlay"
+class="hidden fixed inset-0 z-[99999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center">
     <div class="text-center">
-
-        <!-- Spinner -->
-        <div
-        class="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"
-        ></div>
-
+        <div class="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
         <h2 class="mt-6 text-xl font-semibold text-sky-400">
             Optimizing Your Trip...
         </h2>
-
-        <p class="mt-2 text-slate-400">
+        <p
+            id="loadingMessage"
+            class="mt-2 text-slate-400"
+        >
             Searching flights and building itineraries.
         </p>
+        <!-- EMAIL RESULTS BUTTON -->
 
+        <div class="mt-6 flex flex-col items-center gap-3">
+            <button
+                id="emailResultsBtn"
+                class="hidden px-5 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-black font-semibold transition shadow-lg"
+                type="button"
+            >
+                Send Results to Email 📧
+            </button>
+            <p
+                id="emailStatus"
+                class="text-sm text-slate-400 text-center"
+            ></p>
+        </div>
     </div>
-
 </div>
-
 <script>
+
+const isLoggedIn = {{ user is not none | tojson }};
+let pendingEmailRequest = false;
+
 
 let cityIndex = 0;
 
@@ -577,6 +547,10 @@ fetch(`/search?q=${query}&n=5`)
 .then(res => res.json())
 .then(data => {
 
+
+if (input.value.trim() !== query) {
+    return;
+}
 dropdown.innerHTML = "";
 
 if(data.length === 0){
@@ -597,14 +571,16 @@ option.className =
 
 option.onclick = () => {
 
-input.value = city.name;
-hiddenName.value = city.name;
-hiddenId.value = city.id;
+    input.value = city.name;
+    hiddenName.value = city.name;
+    hiddenId.value = city.id;
 
-dropdown.classList.add("hidden");
+    // clear any previous validation error
+    input.setCustomValidity("");
+
+    dropdown.classList.add("hidden");
 
 };
-
 dropdown.appendChild(option);
 
 });
@@ -615,8 +591,28 @@ dropdown.classList.remove("hidden");
 
 }, 300);
 
-input.addEventListener("input", debouncedOriginSearch);
+input.addEventListener("input", () => {
 
+    hiddenName.value = "";
+    hiddenId.value = "";
+
+    // clear stale validation messages
+    input.setCustomValidity("");
+
+    debouncedOriginSearch();
+
+});
+
+const airportInput =
+    document.querySelector(
+        'input[name="origin_airport_code"]'
+    );
+
+airportInput?.addEventListener("input", () => {
+
+    input.setCustomValidity("");
+
+});
 document.addEventListener("click", (e) => {
 
 if(!wrapper.contains(e.target)){
@@ -679,7 +675,9 @@ return;
 fetch(`/search?q=${query}&n=5`)
 .then(res => res.json())
 .then(data => {
-
+if (input.value.trim() !== query) {
+    return;
+}
 dropdown.innerHTML = "";
 
 if(data.length === 0){
@@ -700,14 +698,16 @@ option.className =
 
 option.onclick = () => {
 
-input.value = city.name;
-hiddenName.value = city.name;
-hiddenId.value = city.id;
+    input.value = city.name;
+    hiddenName.value = city.name;
+    hiddenId.value = city.id;
 
-dropdown.classList.add("hidden");
+    // clear any previous validation error
+    input.setCustomValidity("");
+
+    dropdown.classList.add("hidden");
 
 };
-
 dropdown.appendChild(option);
 
 });
@@ -717,9 +717,17 @@ dropdown.classList.remove("hidden");
 });
 
 }, 300);
+input.addEventListener("input", () => {
 
-input.addEventListener("input", debouncedCitySearch);
+    hiddenName.value = "";
+    hiddenId.value = "";
 
+    // clear stale validation message
+    input.setCustomValidity("");
+
+    debouncedCitySearch();
+
+});
 document.addEventListener("click", (e) => {
 
 if(!wrapper.contains(e.target)){
@@ -798,10 +806,20 @@ const data = await response.json();
 document.getElementById("message").innerText =
 data.message || "Logged in";
 
-if(data.success){
+if (data.success) {
 
-location.reload();
+    if (pendingEmailRequest) {
 
+        pendingEmailRequest = false;
+
+        modal.classList.add("hidden");
+
+        await sendResultsEmail();
+
+        return;
+    }
+
+    location.reload();
 }
 
 }
@@ -827,6 +845,7 @@ password
 
 });
 
+
 const data = await response.json();
 
 document.getElementById("message").innerText =
@@ -842,37 +861,96 @@ await fetch("/logout");
 location.reload();
 
 }
+const emailBtn = document.getElementById("emailResultsBtn");
+const emailStatus = document.getElementById("emailStatus");
+
+emailBtn?.addEventListener("click", async () => {
+
+    // Not logged in → show login modal
+    if (!isLoggedIn) {
+
+        pendingEmailRequest = true;
+
+        document.getElementById("message").innerText =
+            "Please log in to email your results.";
+
+        modal.classList.remove("hidden");
+
+        return;
+    }
+
+    sendResultsEmail();
+});
 
 
+async function sendResultsEmail() {
+
+    const emailBtn = document.getElementById("emailResultsBtn");
+    const emailStatus = document.getElementById("emailStatus");
+    console.log("entered sendResultsEmail");
+
+    emailBtn.disabled = true;
+    emailStatus.textContent = "Sending email...";
+
+    try {
+
+        const response = await fetch("/send-results-email", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            emailStatus.textContent =
+                "✅ Results emailed successfully.";
+
+        } else {
+
+            emailStatus.textContent =
+                data.message || "Failed to send email.";
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        emailStatus.textContent =
+            "Error sending email.";
+
+    }
+
+    emailBtn.disabled = false;
+}
+
+emailBtn?.addEventListener("click", async () => {
+
+    console.log("clicked");
+
+    if (!isLoggedIn) {
+        console.log("not logged in");
+        return;
+    }
+
+    console.log("calling sendResultsEmail");
+
+    sendResultsEmail();
+});
 /* Loading Screen */
 
 const tripForm = document.getElementById("tripForm");
 
+const minNightsInput = document.getElementById("minNights");
+const maxNightsInput = document.getElementById("maxNights");
+emailBtn.addEventListener("click", () => {
+    console.log("EMAIL CLICKED");
+});
 if (tripForm) {
 
-    tripForm.addEventListener("submit", () => {
-
-        const overlay = document.getElementById("loadingOverlay");
-
-        overlay.classList.remove("hidden");
-
-        // Prevent double-click submissions
-        const submitBtn = tripForm.querySelector('button[type="submit"]');
-
-        if (submitBtn) {
-
-            submitBtn.disabled = true;
-
-            submitBtn.innerHTML = `
-                <span class="flex items-center justify-center gap-2">
-                    <span class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-                    Processing...
-                </span>
-            `;
-        }
-    });
-
-}
 const loadingMessages = [
     "Searching flights...",
     "Checking hotel combinations...",
@@ -880,26 +958,132 @@ const loadingMessages = [
     "Comparing prices...",
     "Building your itinerary..."
 ];
-
 let messageIndex = 0;
+let loadingInterval;
+tripForm?.addEventListener("submit", (e) => {
 
-tripForm?.addEventListener("submit", () => {
+    // const start = startDateInput.value;
+    // const end = endDateInput.value;
 
-    const status = document.querySelector("#loadingOverlay p");
+    // // ---------------------------
+    // // DATE VALIDATION (NO CLEARING INPUT)
+    // // ---------------------------
+    // if (start && end && end < start) {
+    //     endDateInput.setCustomValidity("End date must be on or after the start date.");
+    //     endDateInput.reportValidity();
+    //     e.preventDefault();
+    //     return;
+    // }
 
-    setInterval(() => {
+    const start = startDateInput.value;
+    const end = endDateInput.value;
 
-        messageIndex =
-            (messageIndex + 1) % loadingMessages.length;
 
-        status.textContent =
-            loadingMessages[messageIndex];
+    if (!validateDates()) {
+        endDateInput.reportValidity();
+        e.preventDefault();
+        return;
+    }
+    // endDateInput.setCustomValidity("");
 
+    // ---------------------------
+    // ORIGIN VALIDATION
+    // ---------------------------
+    const originInput = document.querySelector(".origin-input");
+    const originId = document.querySelector(".origin-id").value.trim();
+    const originAirport = document.querySelector('input[name="origin_airport_code"]').value.trim();
+
+    if (!originId && !originAirport) {
+        originInput.setCustomValidity("Select a departure city or enter an airport code.");
+        originInput.reportValidity();
+        e.preventDefault();
+        return;
+    }
+
+    originInput.setCustomValidity("");
+
+    // ---------------------------
+    // CITY VALIDATION
+    // ---------------------------
+    const cityInputs = document.querySelectorAll(".city-input");
+    const cityIds = document.querySelectorAll(".city-id");
+
+    for (let i = 0; i < cityInputs.length; i++) {
+
+        const typed = cityInputs[i].value.trim();
+        const id = cityIds[i].value.trim();
+
+        if (!typed) continue;
+
+        const hiddenName =
+            cityInputs[i].parentElement.querySelector(".city-name").value.trim();
+
+        if (!id || !hiddenName) {
+            cityInputs[i].setCustomValidity("Please select a city from the dropdown list.");
+            cityInputs[i].reportValidity();
+            e.preventDefault();
+            return;
+        }
+    }
+// REQUIRE AT LEAST ONE DESTINATION
+let hasDestination = false;
+
+for (let i = 0; i < cityIds.length; i++) {
+    if (cityIds[i].value.trim()) {
+        hasDestination = true;
+        break;
+    }
+}
+
+if (!hasDestination) {
+    cityInputs[0].setCustomValidity(
+        "Please select at least one destination city."
+    );
+    cityInputs[0].reportValidity();
+    e.preventDefault();
+    return;
+}
+
+cityInputs.forEach(input => input.setCustomValidity(""));
+    // ---------------------------
+    // SHOW LOADING OVERLAY
+    // ---------------------------
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.classList.remove("hidden");
+
+    const emailBtn = document.getElementById("emailResultsBtn");
+
+    if (emailBtn) {
+    emailBtn.classList.remove("hidden");
+    }
+
+
+    const submitBtn = tripForm.querySelector('button[type="submit"]');
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <span class="flex items-center justify-center gap-2">
+                <span class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                Processing...
+            </span>
+        `;
+    }
+
+    // ---------------------------
+    // LOADING MESSAGES
+    // ---------------------------
+    const status =document.getElementById("loadingMessage");
+    clearInterval(loadingInterval);
+    messageIndex = 0;
+
+    loadingInterval = setInterval(() => {
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        if (status) status.textContent = loadingMessages[messageIndex];
     }, 2500);
 
 });
-
-
+}
 // start advanced toggle
 
 const advancedToggle =
@@ -922,6 +1106,138 @@ advancedToggle?.addEventListener("click", () => {
     }
 
 });
+
+window.addEventListener("pageshow", () => {
+
+    // Hide loading overlay when returning via browser Back button
+    const overlay = document.getElementById("loadingOverlay");
+
+    if (overlay) {
+        overlay.classList.add("hidden");
+    }
+
+    // Re-enable submit button
+    const submitBtn =
+        document.querySelector('#tripForm button[type="submit"]');
+
+    if (submitBtn) {
+
+        submitBtn.disabled = false;
+
+        submitBtn.innerHTML = "Optimize My Trip";
+    }
+
+});
+
+const startDateInput =
+    document.querySelector('input[name="start_date"]');
+
+const endDateInput =
+    document.querySelector('input[name="end_date"]');
+
+
+function validateDates() {
+    const startVal = startDateInput.value;
+    const endVal = endDateInput.value;
+
+    startDateInput.setCustomValidity("");
+    endDateInput.setCustomValidity("");
+
+    if (!startVal || !endVal) return true;
+
+    const start = new Date(startVal);
+    const end = new Date(endVal);
+
+    if (end < start) {
+        endDateInput.setCustomValidity("End date must be on or after start date.");
+        return false;
+    }
+
+    return true;
+}
+
+
+startDateInput.addEventListener("change", validateDates);
+endDateInput.addEventListener("change", validateDates);
+// Optional: also run once on load
+// updateDateConstraints();
+
+
+// startDateInput.addEventListener(
+//     "change",
+//     syncDateConstraints
+// );
+
+// endDateInput.addEventListener(
+//     "change",
+//     syncDateConstraints
+// );
+
+//advancedToggle?.addEventListener("click", () => {
+
+    // advancedSection.classList.toggle("hidden");
+
+    // if (advancedSection.classList.contains("hidden")) {
+        // advancedArrow.textContent = "▶";
+    // } else {
+        // advancedArrow.textContent = "▼";
+    // }
+
+// });
+
+/* ORIGIN VALIDATION */
+
+// const originSearchInput =
+//     document.querySelector(".origin-input");
+
+// const originAirportInput =
+//     document.querySelector(
+//         'input[name="origin_airport_code"]'
+//     );
+
+// const originCityHidden =
+//     document.querySelector(".origin-name");
+
+// function validateOriginFields() {
+
+//     originSearchInput.setCustomValidity("");
+
+//     const hasCity =
+//         originCityHidden.value.trim() !== "";
+
+//     const hasAirport =
+//         originAirportInput.value.trim() !== "";
+
+//     if (!hasCity && !hasAirport) {
+
+//         originSearchInput.setCustomValidity(
+//             "Select a departure city or enter an airport code."
+//         );
+
+//         return false;
+//     }
+
+//     return true;
+// }
+
+// tripForm.addEventListener("submit", (e) => {
+
+//     if (!validateOriginFields()) {
+
+//         originSearchInput.reportValidity();
+
+//         e.preventDefault();
+//     }
+// });
+
+// originSearchInput.addEventListener("input", () => {
+//     originSearchInput.setCustomValidity("");
+// });
+
+// originAirportInput.addEventListener("input", () => {
+//     originSearchInput.setCustomValidity("");
+// });
+
 
 </script>
 
