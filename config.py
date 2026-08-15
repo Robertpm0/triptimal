@@ -13,7 +13,7 @@ RESERVED_CPUS = 4  # Flask + Gunicorn + Nginx + OS
 SEARCH_CPU_BUDGET = TOTAL_CPUS - RESERVED_CPUS
 
 # Max simultaneous searches
-MAX_ACTIVE_SEARCHES = 3
+MAX_ACTIVE_SEARCHES =1
 
 # Workers per search
 SEARCH_WORKERS = max(1, SEARCH_CPU_BUDGET // MAX_ACTIVE_SEARCHES)
